@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { db, type Term, type Progress } from '@/lib/db';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { Search, Calendar, History, Trash2, ChevronRight, Zap, Target } from 'lucide-react';
+import { Search, Calendar, History, Trash2, ChevronRight, Zap, Target, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useIsMounted } from '@/hooks/useIsMounted';
@@ -39,6 +39,20 @@ export default function LibraryPage() {
                 await db.progress.delete(id);
             });
             if (selectedTermId === id) setSelectedTermId(null);
+        }
+    };
+
+    const handleResetProgress = async (id: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (confirm('Are you sure you want to reset progress for this term?')) {
+            await db.progress.put({
+                termId: id,
+                nextReview: Date.now(),
+                interval: 0,
+                repetition: 0,
+                efactor: 2.5,
+                history: []
+            });
         }
     };
 
@@ -136,12 +150,20 @@ export default function LibraryPage() {
                                                         <p className="text-zinc-400 italic text-sm">"{item.context}"</p>
                                                     </div>
                                                 )}
-                                                <button
-                                                    onClick={(e) => handleDelete(item.id, e)}
-                                                    className="flex items-center gap-2 text-red-400 text-sm font-bold hover:text-red-300 transition-colors pt-4"
-                                                >
-                                                    <Trash2 size={16} /> Delete from Neural Base
-                                                </button>
+                                                <div className="flex flex-col gap-3 pt-4 border-t border-white/5">
+                                                    <button
+                                                        onClick={(e) => handleResetProgress(item.id, e)}
+                                                        className="flex items-center gap-2 text-zinc-400 text-sm font-bold hover:text-zinc-300 transition-colors"
+                                                    >
+                                                        <RefreshCw size={16} /> Reset Neural Pattern
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => handleDelete(item.id, e)}
+                                                        className="flex items-center gap-2 text-red-400 text-sm font-bold hover:text-red-300 transition-colors"
+                                                    >
+                                                        <Trash2 size={16} /> Delete from Neural Base
+                                                    </button>
+                                                </div>
                                             </div>
 
                                             <div className="grid grid-cols-2 gap-4">

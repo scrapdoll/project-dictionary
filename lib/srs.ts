@@ -45,17 +45,20 @@ export function calculateNextReview(
         repetition += 1;
     } else {
         repetition = 0;
-        interval = 1;
+        interval = 0; // Failed items should be re-studied immediately
     }
-
-    if (interval < 1) interval = 1;
 
     efactor = efactor + (0.1 - (5 - grade) * (0.08 + (5 - grade) * 0.02));
     if (efactor < 1.3) efactor = 1.3;
 
-    const nextDate = new Date(Date.now() + interval * 24 * 60 * 60 * 1000);
-    nextDate.setHours(4, 0, 0, 0); // Available from 4:00 AM of that day
-    const nextReview = nextDate.getTime();
+    let nextReview: number;
+    if (interval === 0) {
+        nextReview = Date.now(); // Immediate
+    } else {
+        const nextDate = new Date(Date.now() + interval * 24 * 60 * 60 * 1000);
+        nextDate.setHours(4, 0, 0, 0); // Available from 4:00 AM of that day
+        nextReview = nextDate.getTime();
+    }
 
     return {
         interval,
@@ -64,3 +67,4 @@ export function calculateNextReview(
         nextReview,
     };
 }
+

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { db } from '@/lib/db';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { Save, AlertCircle, Bot, Globe, Key, Cpu } from 'lucide-react';
+import { Save, AlertCircle, Bot, Globe, Key, Cpu, RefreshCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -38,6 +38,26 @@ export default function SettingsPage() {
         });
         setStatus('saved');
         setTimeout(() => setStatus('idle'), 2000);
+    };
+
+    const handleResetAllProgress = async () => {
+        if (confirm('Are you sure you want to reset ALL progress statistics? This will mark all words as "New" and clear your review history. This action cannot be undone.')) {
+            await db.transaction('rw', db.progress, db.terms, async () => {
+                const allTerms = await db.terms.toArray();
+                await db.progress.clear();
+                const now = Date.now();
+                const initialProgress = allTerms.map(term => ({
+                    termId: term.id,
+                    nextReview: now,
+                    interval: 0,
+                    repetition: 0,
+                    efactor: 2.5,
+                    history: []
+                }));
+                await db.progress.bulkAdd(initialProgress);
+            });
+            alert('All progress has been reset.');
+        }
     };
 
     return (
@@ -154,6 +174,18 @@ export default function SettingsPage() {
                             </>
                         )}
                     </button>
+
+                    <div className="w-full pt-6 border-t border-white/5">
+                        <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest text-center mb-4">Danger Zone</p>
+                        <button
+                            type="button"
+                            onClick={handleResetAllProgress}
+                            className="w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all border border-red-500/20 text-red-400 hover:bg-red-500/10 active:scale-[0.98]"
+                        >
+                            <RefreshCcw size={20} />
+                            Reset All Progress Statistics
+                        </button>
+                    </div>
                 </div>
             </form>
         </motion.div>
