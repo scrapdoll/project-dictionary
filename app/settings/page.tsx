@@ -175,8 +175,28 @@ export default function SettingsPage() {
                         )}
                     </button>
 
-                    <div className="w-full pt-6 border-t border-white/5">
-                        <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest text-center mb-4">Danger Zone</p>
+                    <div className="w-full pt-6 border-t border-white/5 space-y-4">
+                        <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest text-center mb-4">Data Management</p>
+
+                        <button
+                            type="button"
+                            onClick={async () => {
+                                const { exportDatabase } = await import('@/lib/db');
+                                const data = await exportDatabase();
+                                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = `neurolex-export-${new Date().toISOString().split('T')[0]}.json`;
+                                a.click();
+                                URL.revokeObjectURL(url);
+                            }}
+                            className="w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all bg-zinc-800 text-white hover:bg-zinc-700 active:scale-[0.98]"
+                        >
+                            <RefreshCcw size={20} className="rotate-180" />
+                            Export Dictionary to JSON
+                        </button>
+
                         <button
                             type="button"
                             onClick={handleResetAllProgress}

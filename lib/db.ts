@@ -47,4 +47,15 @@ db.version(2).stores({
     });
 });
 
+export async function exportDatabase() {
+    const terms = await db.terms.toArray();
+    const progress = await db.progress.toArray();
+    return {
+        terms,
+        progress,
+        exportedAt: Date.now(),
+        version: 1
+    };
+}
+
 export { db };
