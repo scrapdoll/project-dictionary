@@ -13,6 +13,7 @@ export default function SettingsPage() {
         apiKey: '',
         apiBaseUrl: 'https://api.openai.com/v1',
         model: 'gpt-4o',
+        language: typeof navigator !== 'undefined' ? navigator.language : 'en-US',
         aiEnabled: true,
     });
 
@@ -24,6 +25,7 @@ export default function SettingsPage() {
                 apiKey: currentSettings.apiKey,
                 apiBaseUrl: currentSettings.apiBaseUrl,
                 model: currentSettings.model,
+                language: currentSettings.language || navigator.language,
                 aiEnabled: currentSettings.aiEnabled,
             });
         }
@@ -149,6 +151,30 @@ export default function SettingsPage() {
                                     onChange={e => setFormData(prev => ({ ...prev, model: e.target.value }))}
                                 />
                             </div>
+
+                            <div className="space-y-2">
+                                <label className="flex items-center gap-2 text-sm font-bold text-zinc-300">
+                                    <Globe size={16} className="text-zinc-500" />
+                                    AI Language
+                                </label>
+                                <select
+                                    className="glass-input text-sm appearance-none bg-zinc-900"
+                                    value={formData.language}
+                                    onChange={e => setFormData(prev => ({ ...prev, language: e.target.value }))}
+                                >
+                                    <option value="en-US">English (US)</option>
+                                    <option value="es-ES">Spanish</option>
+                                    <option value="fr-FR">French</option>
+                                    <option value="de-DE">German</option>
+                                    <option value="it-IT">Italian</option>
+                                    <option value="pt-BR">Portuguese</option>
+                                    <option value="ru-RU">Russian</option>
+                                    <option value="zh-CN">Chinese</option>
+                                    <option value="ja-JP">Japanese</option>
+                                    <option value="ko-KR">Korean</option>
+                                    <option value={navigator.language || 'en-US'}>System Default ({navigator.language})</option>
+                                </select>
+                            </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -208,6 +234,6 @@ export default function SettingsPage() {
                     </div>
                 </div>
             </form>
-        </motion.div>
+        </motion.div >
     );
 }

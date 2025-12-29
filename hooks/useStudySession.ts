@@ -66,7 +66,8 @@ export function useStudySession() {
                     item.term.context || '',
                     currentSettings.apiKey,
                     currentSettings.model,
-                    currentSettings.apiBaseUrl
+                    currentSettings.apiBaseUrl,
+                    currentSettings.language || 'en-US'
                 );
                 setAiQuiz(quiz);
                 setMode('question');
@@ -94,7 +95,8 @@ export function useStudySession() {
                     userAnswer,
                     currentSettings.apiKey,
                     currentSettings.model,
-                    currentSettings.apiBaseUrl
+                    currentSettings.apiBaseUrl,
+                    currentSettings.language || 'en-US'
                 );
                 setEvaluation(ev);
                 setMode('feedback');

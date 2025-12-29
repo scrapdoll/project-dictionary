@@ -20,6 +20,7 @@ export interface Settings {
     apiKey: string;
     apiBaseUrl: string;
     model: string;
+    language: string; // Target language for AI interaction
     aiEnabled: boolean;
     xp: number; // Gamification
 }
