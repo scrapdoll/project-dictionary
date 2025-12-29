@@ -2,15 +2,15 @@ import { describe, it, expect } from 'vitest';
 import { calculateNextReview } from './srs';
 
 describe('SM-2 Algorithm (srs.ts)', () => {
-    it('should initialize interval to 1 for first successful review (Grade 5)', () => {
+    it('should initialize interval to 4 for first perfect review (Grade 5)', () => {
         const result = calculateNextReview(5, 0, 2.5, 0);
-        expect(result.interval).toBe(1);
+        expect(result.interval).toBe(4);
         expect(result.repetition).toBe(1);
         expect(result.efactor).toBeGreaterThan(2.5);
     });
 
-    it('should set interval to 6 for second successful review (Grade 4)', () => {
-        const result = calculateNextReview(4, 1, 2.6, 1);
+    it('should set interval to 6 for second correct review (Grade 4)', () => {
+        const result = calculateNextReview(4, 1, 2.6, 2);
         expect(result.interval).toBe(6);
         expect(result.repetition).toBe(2);
     });

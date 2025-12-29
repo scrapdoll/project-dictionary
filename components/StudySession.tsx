@@ -112,18 +112,25 @@ export default function StudySession() {
         if (!currentItem) return;
 
         const { term, progress } = currentItem;
-        const result = calculateNextReview(grade, progress.repetition, progress.efactor, progress.interval);
-
-        const xpGain = 10 + (grade * 2);
+        const xpGain = 10 + (Number(grade) * 2);
         setXpReward(xpGain);
 
         await db.transaction('rw', db.progress, db.settings, async () => {
-            await db.progress.update(progress.termId, {
-                nextReview: result.nextReview,
-                interval: result.interval,
-                repetition: result.repetition,
+            const freshProgress = await db.progress.get(progress.termId);
+            if (!freshProgress) return;
+
+            const result = calculateNextReview(grade, freshProgress.repetition, freshProgress.efactor, freshProgress.interval);
+            const history = Array.isArray(freshProgress.history) ? freshProgress.history : [];
+
+            console.log(`[SRS] Syncing ${term.content}: grade=${grade}, oldRep=${freshProgress.repetition}, newRep=${result.repetition}, interval=${result.interval}d, next=${new Date(result.nextReview).toLocaleString()}`);
+
+            await db.progress.put({
+                termId: progress.termId,
+                nextReview: Math.floor(result.nextReview),
+                interval: Math.floor(result.interval),
+                repetition: Math.floor(result.repetition),
                 efactor: result.efactor,
-                history: [...(progress.history || []), { date: Date.now(), grade }]
+                history: [...history, { date: Date.now(), grade: Number(grade) }]
             });
 
             const currentSettings = await db.settings.get(1);
