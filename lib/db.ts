@@ -1,30 +1,9 @@
 import Dexie, { type EntityTable } from 'dexie';
 
-export interface Term {
-    id: string; // uuid
-    content: string; // The word or phrase
-    definition: string;
-    context?: string; // Example sentence or notes
-    createdAt: number;
-}
+import { Term, Progress, Settings } from './types';
 
-export interface Progress {
-    termId: string;
-    nextReview: number; // Timestamp of next review
-    interval: number; // Current interval in days
-    repetition: number; // Number of successful repetitions
-    efactor: number; // Easiness factor (SM-2)
-    history: { date: number; grade: number }[];
-}
+export type { Term, Progress, Settings };
 
-export interface Settings {
-    id?: number; // Singleton (always 1)
-    apiKey: string;
-    apiBaseUrl: string;
-    model: string;
-    aiEnabled: boolean;
-    xp: number; // Gamification
-}
 
 const db = new Dexie('DictionaryAgentDB') as Dexie & {
     terms: EntityTable<Term, 'id'>;

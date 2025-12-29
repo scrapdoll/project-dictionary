@@ -1,13 +1,7 @@
-export interface QuizGeneration {
-    question: string;
-    type: 'definition' | 'context' | 'scenario';
-}
+import { QuizGeneration, QuizEvaluation } from './types';
 
-export interface QuizEvaluation {
-    grade: number; // 0-5
-    feedback: string;
-    correctAnswer: string;
-}
+export type { QuizGeneration, QuizEvaluation };
+
 
 const SYSTEM_PROMPT_GENERATE = (term: string, context: string) => `
 You are an expert language tutor. The user is learning the term "${term}".
