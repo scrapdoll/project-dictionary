@@ -6,12 +6,15 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { Search, Calendar, History, Trash2, ChevronRight, Zap, Target } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { useIsMounted } from '@/hooks/useIsMounted';
 
 export default function LibraryPage() {
+    const isMounted = useIsMounted();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedTermId, setSelectedTermId] = useState<string | null>(null);
 
     const data = useLiveQuery(async () => {
+        if (typeof window === 'undefined') return [];
         const terms = await db.terms.toArray();
         const progress = await db.progress.toArray();
 
@@ -20,6 +23,8 @@ export default function LibraryPage() {
             progress: progress.find(p => p.termId === t.id)
         }));
     });
+
+    if (!isMounted) return <div className="min-h-[400px]" />;
 
     const filteredData = data?.filter(item =>
         item.content.toLowerCase().includes(searchQuery.toLowerCase()) ||

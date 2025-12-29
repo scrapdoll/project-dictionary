@@ -9,10 +9,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Brain, Check, X, RotateCcw, AlertCircle, Send, ChevronRight, Award, Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { useIsMounted } from '@/hooks/useIsMounted';
 
 type StudyState = 'loading' | 'ready' | 'question' | 'evaluating' | 'feedback' | 'finished' | 'error';
 
 export default function StudySession() {
+    const isMounted = useIsMounted();
     const settings = useLiveQuery(() => db.settings.get(1));
     const [queue, setQueue] = useState<{ term: Term, progress: Progress }[]>([]);
     const [currentItem, setCurrentItem] = useState<{ term: Term, progress: Progress } | null>(null);
@@ -80,9 +82,9 @@ export default function StudySession() {
     }
 
     async function handleSubmitAnswer() {
-        if (!currentItem || !settings) return;
+        if (!currentItem) return;
 
-        if (aiQuiz) {
+        if (aiQuiz && settings?.apiKey) {
             setMode('evaluating');
             try {
                 const ev = await evaluateAnswer(
@@ -127,6 +129,16 @@ export default function StudySession() {
             const currentSettings = await db.settings.get(1);
             if (currentSettings) {
                 await db.settings.update(1, { xp: (currentSettings.xp || 0) + xpGain });
+            } else {
+                // Initialize default settings with first XP if they don't exist
+                await db.settings.put({
+                    id: 1,
+                    apiKey: '',
+                    apiBaseUrl: 'https://api.openai.com/v1',
+                    model: 'gpt-4o',
+                    aiEnabled: true,
+                    xp: xpGain
+                });
             }
         });
     }
@@ -141,7 +153,7 @@ export default function StudySession() {
         }
     }
 
-    if (mode === 'loading') {
+    if (!isMounted || mode === 'loading') {
         return (
             <div className="flex flex-col items-center justify-center min-h-[400px]">
                 <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}>
@@ -185,7 +197,7 @@ export default function StudySession() {
             <AnimatePresence mode="wait">
                 {mode === 'question' && (
                     <motion.div key="question" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} className="glass-card p-10 space-y-8 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-3xl" />
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-3xl pointer-events-none" />
 
                         {aiQuiz ? (
                             <div className="space-y-8">

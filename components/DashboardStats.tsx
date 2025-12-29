@@ -6,8 +6,10 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { motion } from 'framer-motion';
 import { Sparkles, Trophy, Target, Library } from 'lucide-react';
+import { useIsMounted } from '@/hooks/useIsMounted';
 
 export default function DashboardStats() {
+    const isMounted = useIsMounted();
     const allProgress = useLiveQuery(() => db.progress.toArray());
     const [stats, setStats] = useState({
         total: 0,
@@ -40,6 +42,8 @@ export default function DashboardStats() {
         { name: 'Learned', value: stats.learned, color: '#818cf8' },
         { name: 'Mastered', value: stats.mastered, color: '#a855f7' },
     ];
+
+    if (!isMounted) return <div className="min-h-[300px]" />;
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
