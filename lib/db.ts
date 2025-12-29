@@ -37,4 +37,17 @@ export async function exportDatabase() {
     };
 }
 
+export async function importDatabase(data: any) {
+    if (!data.terms || !data.progress) {
+        throw new Error('Invalid backup file format');
+    }
+
+    await db.transaction('rw', db.terms, db.progress, async () => {
+        await db.terms.clear();
+        await db.progress.clear();
+        await db.terms.bulkAdd(data.terms);
+        await db.progress.bulkAdd(data.progress);
+    });
+}
+
 export { db };

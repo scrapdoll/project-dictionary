@@ -219,9 +219,45 @@ export default function SettingsPage() {
                             }}
                             className="w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all bg-zinc-800 text-white hover:bg-zinc-700 active:scale-[0.98]"
                         >
-                            <RefreshCcw size={20} className="rotate-180" />
                             Export Dictionary to JSON
                         </button>
+
+                        <div className="relative">
+                            <input
+                                type="file"
+                                accept=".json"
+                                onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file) return;
+
+                                    if (!confirm('WARNING: Importing a dictionary will REPLACE all your current terms and progress. This cannot be undone. Are you sure you want to proceed?')) {
+                                        e.target.value = ''; // Reset input
+                                        return;
+                                    }
+
+                                    try {
+                                        const text = await file.text();
+                                        const data = JSON.parse(text);
+                                        const { importDatabase } = await import('@/lib/db');
+                                        await importDatabase(data);
+                                        alert('Dictionary imported successfully!');
+                                        window.location.reload();
+                                    } catch (err) {
+                                        console.error(err);
+                                        alert('Failed to import dictionary. Please check the file format.');
+                                    }
+                                    e.target.value = ''; // Reset input
+                                }}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                            />
+                            <button
+                                type="button"
+                                className="w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all bg-zinc-800 text-white hover:bg-zinc-700 active:scale-[0.98]"
+                            >
+                                <RefreshCcw size={20} className="rotate-90" />
+                                Import Dictionary from JSON
+                            </button>
+                        </div>
 
                         <button
                             type="button"
