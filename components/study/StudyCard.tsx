@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion';
 import { Brain, Send } from 'lucide-react';
 import { Term, QuizGeneration } from '@/lib/types';
+import { useT } from '@/lib/useTranslations';
+import { useT as useCommonT } from '@/lib/useTranslations';
 
 interface StudyCardProps {
     term: Term;
@@ -11,6 +13,9 @@ interface StudyCardProps {
 }
 
 export function StudyCard({ term, aiQuiz, userAnswer, onUserAnswerChange, onSubmit }: StudyCardProps) {
+    const t = useT('study');
+    const tCommon = useCommonT('common');
+
     if (aiQuiz) {
         return (
             <motion.div
@@ -23,7 +28,7 @@ export function StudyCard({ term, aiQuiz, userAnswer, onUserAnswerChange, onSubm
                 <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-3xl pointer-events-none" />
                 <div className="space-y-8">
                     <div className="flex items-center gap-2 text-blue-400 font-bold uppercase text-[10px] tracking-widest">
-                        <Brain size={14} /> AI Context Injection
+                        <Brain size={14} /> {t('card.aiContext')}
                     </div>
                     {aiQuiz.type === 'cloze' && aiQuiz.question.includes('____') ? (
                         <div className="text-2xl font-bold leading-relaxed tracking-tight text-zinc-100">
@@ -35,7 +40,7 @@ export function StudyCard({ term, aiQuiz, userAnswer, onUserAnswerChange, onSubm
                                             type="text"
                                             className="mx-2 px-3 py-1 bg-white/10 border-b-2 border-blue-500/50 focus:border-blue-500 outline-none rounded-md transition-all text-blue-400 placeholder:text-blue-500/30"
                                             style={{ width: `${Math.max(userAnswer.length, 3) + 1}ch` }}
-                                            placeholder="..."
+                                            placeholder={t('card.placeholder')}
                                             value={userAnswer}
                                             onChange={e => onUserAnswerChange(e.target.value)}
                                             onKeyDown={e => e.key === 'Enter' && userAnswer.trim() && onSubmit()}
@@ -77,14 +82,14 @@ export function StudyCard({ term, aiQuiz, userAnswer, onUserAnswerChange, onSubm
                     ) : aiQuiz.type !== 'cloze' || !aiQuiz.question.includes('____') ? (
                         <textarea
                             className="glass-input min-h-[160px] text-lg leading-relaxed"
-                            placeholder="Enter your response..."
+                            placeholder={t('card.enterResponse')}
                             value={userAnswer}
                             onChange={e => onUserAnswerChange(e.target.value)}
                             autoFocus
                         />
                     ) : null}
                     <button onClick={onSubmit} className="w-full py-5 rounded-2xl bg-white text-black font-bold flex items-center justify-center gap-2 hover:bg-zinc-200 transition-all active:scale-[0.98] shadow-2xl">
-                        Transmit Result
+                        {t('card.transmit')}
                         <Send size={18} />
                     </button>
                 </div>
@@ -103,7 +108,7 @@ export function StudyCard({ term, aiQuiz, userAnswer, onUserAnswerChange, onSubm
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-3xl pointer-events-none" />
             <div className="space-y-10 text-center py-6">
                 <div className="space-y-2">
-                    <div className="text-zinc-500 text-[10px] font-bold uppercase tracking-[0.3em]">Subject Identifier</div>
+                    <div className="text-zinc-500 text-[10px] font-bold uppercase tracking-[0.3em]">{t('card.subject')}</div>
                     <h2 className="text-5xl font-black tracking-tighter text-glow">{term.content}</h2>
                 </div>
                 {term.context && (
@@ -112,7 +117,7 @@ export function StudyCard({ term, aiQuiz, userAnswer, onUserAnswerChange, onSubm
                     </div>
                 )}
                 <button onClick={onSubmit} className="w-full py-5 rounded-2xl bg-white text-black font-bold text-lg hover:bg-zinc-200 transition-all active:scale-[0.98]">
-                    Reveal Pattern
+                    {t('card.reveal')}
                 </button>
             </div>
         </motion.div>

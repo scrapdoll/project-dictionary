@@ -8,8 +8,10 @@ import { useStudySession } from '@/hooks/useStudySession';
 import { useIsMounted } from '@/hooks/useIsMounted';
 import { StudyCard } from './study/StudyCard';
 import { FeedbackView } from './study/FeedbackView';
+import { useT } from '@/lib/useTranslations';
 
 export default function StudySession() {
+    const t = useT('study');
     const isMounted = useIsMounted();
     const {
         mode,
@@ -36,7 +38,7 @@ export default function StudySession() {
                 <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}>
                     <RotateCcw className="w-12 h-12 text-blue-500 opacity-50" />
                 </motion.div>
-                <p className="text-zinc-500 font-mono text-xs mt-6 tracking-widest uppercase">Initializing Neural Link...</p>
+                <p className="text-zinc-500 font-mono text-xs mt-6 tracking-widest uppercase">{t('session.initializing')}</p>
             </div>
         );
     }
@@ -46,19 +48,19 @@ export default function StudySession() {
             <div className="max-w-4xl mx-auto min-h-[60vh] flex flex-col items-center justify-center">
                 <div className="text-center mb-12">
                     <h2 className="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400">
-                        Initiate Neural Link
+                        {t('session.initiate')}
                     </h2>
-                    <p className="text-zinc-400 text-lg">Select your preferred reinforcement protocol</p>
+                    <p className="text-zinc-400 text-lg">{t('session.selectProtocol')}</p>
                 </div>
 
                 <div className="flex flex-wrap justify-center gap-3 mb-10">
                     {[
-                        { id: 'auto', label: 'Auto (Dynamic)', icon: Sparkles },
-                        { id: 'multiple_choice', label: 'Multiple Choice', icon: Zap },
-                        { id: 'cloze', label: 'Fill in the Blank', icon: Sparkles },
-                        { id: 'scenario', label: 'Complex Scenario', icon: Brain },
-                        { id: 'definition', label: 'Context Definition', icon: Sparkles },
-                        { id: 'context', label: 'Sentence Application', icon: Zap }
+                        { id: 'auto', label: t('quizType.auto'), icon: Sparkles },
+                        { id: 'multiple_choice', label: t('quizType.multipleChoice'), icon: Zap },
+                        { id: 'cloze', label: t('quizType.cloze'), icon: Sparkles },
+                        { id: 'scenario', label: t('quizType.scenario'), icon: Brain },
+                        { id: 'definition', label: t('quizType.definition'), icon: Sparkles },
+                        { id: 'context', label: t('quizType.context'), icon: Zap }
                     ].map((type) => (
                         <button
                             key={type.id}
@@ -85,13 +87,13 @@ export default function StudySession() {
                             <div className="w-16 h-16 rounded-2xl bg-blue-500/20 flex items-center justify-center text-blue-400 mb-6">
                                 <Brain size={32} />
                             </div>
-                            <h3 className="text-2xl font-bold text-blue-100">AI Agent Mode</h3>
+                            <h3 className="text-2xl font-bold text-blue-100">{t('mode.ai')}</h3>
                             <p className="text-blue-200/60 leading-relaxed">
-                                Advanced simulation with dynamic scenarios and AI-graded responses for deeper semantic encoding.
+                                {t('mode.aiDescription')}
                             </p>
                             <div className="flex items-center gap-2 text-blue-400 text-sm font-bold mt-4">
                                 <Sparkles size={14} />
-                                <span>High XP Reward</span>
+                                <span>{t('mode.aiReward')}</span>
                             </div>
                         </div>
                     </motion.button>
@@ -106,13 +108,13 @@ export default function StudySession() {
                             <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 mb-6">
                                 <Zap size={32} />
                             </div>
-                            <h3 className="text-2xl font-bold text-emerald-100">Standard Review</h3>
+                            <h3 className="text-2xl font-bold text-emerald-100">{t('mode.standard')}</h3>
                             <p className="text-emerald-200/60 leading-relaxed">
-                                Classic flashcard-style repetition optimized for speed and rapid recall testing.
+                                {t('mode.standardDescription')}
                             </p>
                             <div className="flex items-center gap-2 text-emerald-400 text-sm font-bold mt-4">
                                 <Flame size={14} />
-                                <span>Standard Efficiency</span>
+                                <span>{t('mode.standardEfficiency')}</span>
                             </div>
                         </div>
                     </motion.button>
@@ -128,16 +130,16 @@ export default function StudySession() {
                     <AlertCircle size={32} />
                 </div>
                 <div className="space-y-4">
-                    <h3 className="text-xl font-bold">Neural Link Disruption</h3>
-                    <p className="text-zinc-400 leading-relaxed">{errorMsg || "An unexpected error occurred during synchronization."}</p>
+                    <h3 className="text-xl font-bold">{t('session.disruption')}</h3>
+                    <p className="text-zinc-400 leading-relaxed">{errorMsg || t('session.unexpectedError')}</p>
                 </div>
                 <div className="flex flex-col gap-3">
                     <button onClick={resetToSelection} className="w-full py-4 rounded-xl bg-white text-black font-bold flex items-center justify-center gap-2 hover:bg-zinc-200 transition-all active:scale-95">
                         <RotateCcw size={18} />
-                        Retry Initialization
+                        {t('session.retry')}
                     </button>
                     <Link href="/settings" className="w-full py-4 rounded-xl bg-zinc-800 text-white font-bold flex items-center justify-center gap-2 hover:bg-zinc-700 transition-all active:scale-95">
-                        Verify Configuration
+                        {t('session.verifyConfig')}
                     </Link>
                 </div>
             </motion.div>
@@ -150,10 +152,10 @@ export default function StudySession() {
                 <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
                     <Award className="w-10 h-10 text-emerald-500" />
                 </div>
-                <h2 className="text-3xl font-bold mb-3">Sync Complete</h2>
-                <p className="text-zinc-500 mb-8 font-medium">All neural pathways have been reinforced for today.</p>
+                <h2 className="text-3xl font-bold mb-3">{t('session.syncComplete')}</h2>
+                <p className="text-zinc-500 mb-8 font-medium">{t('session.allReinforced')}</p>
                 <Link href="/" className="w-full py-4 rounded-xl bg-white text-black font-bold flex items-center justify-center gap-2 hover:bg-zinc-200 transition-all active:scale-95">
-                    Return to Hub
+                    {t('session.returnHub')}
                 </Link>
             </motion.div>
         );
@@ -169,11 +171,11 @@ export default function StudySession() {
                     <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 font-bold">
                         {queue.length}
                     </div>
-                    <span className="text-xs font-bold text-zinc-400 uppercase tracking-tighter">Remaining</span>
+                    <span className="text-xs font-bold text-zinc-400 uppercase tracking-tighter">{t('session.remaining')}</span>
                 </div>
                 <div className="flex items-center gap-2 px-3 py-1 bg-zinc-800 rounded-lg">
                     <Flame size={14} className="text-orange-500" />
-                    <span className="text-xs font-bold uppercase tracking-tighter">Active Sync</span>
+                    <span className="text-xs font-bold uppercase tracking-tighter">{t('session.activeSync')}</span>
                 </div>
             </div>
 
@@ -196,8 +198,8 @@ export default function StudySession() {
                             <Brain size={64} className="text-blue-500 relative z-10" />
                         </div>
                         <div className="text-center space-y-2">
-                            <p className="text-xl font-bold">Neural Evaluation</p>
-                            <p className="text-xs text-zinc-500 font-mono animate-pulse">Analyzing semantic accuracy...</p>
+                            <p className="text-xl font-bold">{t('session.neuralEvaluation')}</p>
+                            <p className="text-xs text-zinc-500 font-mono animate-pulse">{t('session.analyzing')}</p>
                         </div>
                     </motion.div>
                 )}

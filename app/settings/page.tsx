@@ -6,14 +6,16 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { Save, AlertCircle, Bot, Globe, Key, Cpu, RefreshCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useT } from '@/lib/useTranslations';
+import { LanguageSelector } from '@/components/LanguageSelector';
 
 export default function SettingsPage() {
+    const t = useT('settings');
     const currentSettings = useLiveQuery(() => db.settings.get(1));
     const [formData, setFormData] = useState({
         apiKey: '',
         apiBaseUrl: 'https://api.openai.com/v1',
         model: 'gpt-4o',
-        language: typeof navigator !== 'undefined' ? navigator.language : 'en-US',
         aiEnabled: true,
     });
 
@@ -25,7 +27,6 @@ export default function SettingsPage() {
                 apiKey: currentSettings.apiKey,
                 apiBaseUrl: currentSettings.apiBaseUrl,
                 model: currentSettings.model,
-                language: currentSettings.language || navigator.language,
                 aiEnabled: currentSettings.aiEnabled,
             });
         }
@@ -36,6 +37,7 @@ export default function SettingsPage() {
         await db.settings.put({
             id: 1,
             ...formData,
+            language: currentSettings?.language || 'en-US',
             xp: currentSettings?.xp || 0
         });
         setStatus('saved');
@@ -43,7 +45,7 @@ export default function SettingsPage() {
     };
 
     const handleResetAllProgress = async () => {
-        if (confirm('Are you sure you want to reset ALL progress statistics? This will mark all words as "New" and clear your review history. This action cannot be undone.')) {
+        if (confirm(t('resetProgressConfirm'))) {
             await db.transaction('rw', db.progress, db.terms, async () => {
                 const allTerms = await db.terms.toArray();
                 await db.progress.clear();
@@ -58,7 +60,7 @@ export default function SettingsPage() {
                 }));
                 await db.progress.bulkAdd(initialProgress);
             });
-            alert('All progress has been reset.');
+            alert(t('progressReset'));
         }
     };
 
@@ -69,8 +71,12 @@ export default function SettingsPage() {
             className="max-w-2xl mx-auto space-y-10 pt-10"
         >
             <div className="space-y-3 text-center">
-                <h1 className="text-4xl font-extrabold tracking-tight">System <span className="text-glow">Config</span></h1>
-                <p className="text-zinc-500 font-medium tracking-wide uppercase text-xs">Bridge the gap between brain and AI</p>
+                <h1 className="text-4xl font-extrabold tracking-tight">
+                    {t.rich('title', {
+                        glow: (chunks) => <span className="text-glow">{chunks}</span>
+                    })}
+                </h1>
+                <p className="text-zinc-500 font-medium tracking-wide uppercase text-xs">{t('tagline')}</p>
             </div>
 
             <form onSubmit={handleSave} className="glass-card p-8 space-y-10">
@@ -83,8 +89,8 @@ export default function SettingsPage() {
                             <Bot size={24} />
                         </div>
                         <div>
-                            <p className="font-bold">Neural Engine</p>
-                            <p className="text-xs text-zinc-500">Enable AI-powered quizzing and grading</p>
+                            <p className="font-bold">{t('neuralEngine')}</p>
+                            <p className="text-xs text-zinc-500">{t('neuralEngineDescription')}</p>
                         </div>
                     </div>
                     <button
@@ -108,17 +114,17 @@ export default function SettingsPage() {
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: "auto", opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
-                            className="space-y-6 overflow-hidden"
+                            className="space-y-6 overflow-visible"
                         >
                             <div className="space-y-2">
                                 <label className="flex items-center gap-2 text-sm font-bold text-zinc-300">
                                     <Globe size={16} className="text-zinc-500" />
-                                    API Endpoint
+                                    {t('apiEndpoint')}
                                 </label>
                                 <input
                                     type="text"
                                     className="glass-input font-mono text-sm"
-                                    placeholder="https://api.openai.com/v1"
+                                    placeholder={t('apiEndpointPlaceholder')}
                                     value={formData.apiBaseUrl}
                                     onChange={e => setFormData(prev => ({ ...prev, apiBaseUrl: e.target.value }))}
                                 />
@@ -127,12 +133,12 @@ export default function SettingsPage() {
                             <div className="space-y-2">
                                 <label className="flex items-center gap-2 text-sm font-bold text-zinc-300">
                                     <Key size={16} className="text-zinc-500" />
-                                    Access Token
+                                    {t('accessToken')}
                                 </label>
                                 <input
                                     type="password"
                                     className="glass-input font-mono text-sm"
-                                    placeholder="sk-••••••••••••••••••••••••"
+                                    placeholder={t('accessTokenPlaceholder')}
                                     value={formData.apiKey}
                                     onChange={e => setFormData(prev => ({ ...prev, apiKey: e.target.value }))}
                                 />
@@ -141,39 +147,23 @@ export default function SettingsPage() {
                             <div className="space-y-2">
                                 <label className="flex items-center gap-2 text-sm font-bold text-zinc-300">
                                     <Cpu size={16} className="text-zinc-500" />
-                                    Intelligence Model
+                                    {t('intelligenceModel')}
                                 </label>
                                 <input
                                     type="text"
                                     className="glass-input font-mono text-sm"
-                                    placeholder="gpt-4o"
+                                    placeholder={t('intelligenceModelPlaceholder')}
                                     value={formData.model}
                                     onChange={e => setFormData(prev => ({ ...prev, model: e.target.value }))}
                                 />
                             </div>
 
-                            <div className="space-y-2">
+                            <div className="space-y-2 relative">
                                 <label className="flex items-center gap-2 text-sm font-bold text-zinc-300">
                                     <Globe size={16} className="text-zinc-500" />
-                                    AI Language
+                                    {t('language')}
                                 </label>
-                                <select
-                                    className="glass-input text-sm appearance-none bg-zinc-900"
-                                    value={formData.language}
-                                    onChange={e => setFormData(prev => ({ ...prev, language: e.target.value }))}
-                                >
-                                    <option value="en-US">English (US)</option>
-                                    <option value="es-ES">Spanish</option>
-                                    <option value="fr-FR">French</option>
-                                    <option value="de-DE">German</option>
-                                    <option value="it-IT">Italian</option>
-                                    <option value="pt-BR">Portuguese</option>
-                                    <option value="ru-RU">Russian</option>
-                                    <option value="zh-CN">Chinese</option>
-                                    <option value="ja-JP">Japanese</option>
-                                    <option value="ko-KR">Korean</option>
-                                    <option value={navigator.language || 'en-US'}>System Default ({navigator.language})</option>
-                                </select>
+                                <LanguageSelector />
                             </div>
                         </motion.div>
                     )}
@@ -182,7 +172,7 @@ export default function SettingsPage() {
                 <div className="pt-6 flex flex-col items-center gap-6 border-t border-white/5">
                     <div className="text-xs text-zinc-500 flex items-center gap-2 bg-zinc-900/50 px-4 py-2 rounded-full border border-zinc-800">
                         <AlertCircle size={14} className="text-amber-500/70" />
-                        Keys are stored locally in IndexedDB. Never shared.
+                        {t('keysWarning')}
                     </div>
                     <button
                         type="submit"
@@ -192,17 +182,17 @@ export default function SettingsPage() {
                         )}
                     >
                         {status === 'saved' ? (
-                            <>Done!</>
+                            <>{t('done')}</>
                         ) : (
                             <>
                                 <Save size={20} />
-                                Synchronize Configuration
+                                {t('synchronize')}
                             </>
                         )}
                     </button>
 
                     <div className="w-full pt-6 border-t border-white/5 space-y-4">
-                        <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest text-center mb-4">Data Management</p>
+                        <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest text-center mb-4">{t('dataManagement')}</p>
 
                         <button
                             type="button"
@@ -219,7 +209,7 @@ export default function SettingsPage() {
                             }}
                             className="w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all bg-zinc-800 text-white hover:bg-zinc-700 active:scale-[0.98]"
                         >
-                            Export Dictionary to JSON
+                            {t('exportDictionary')}
                         </button>
 
                         <div className="relative">
@@ -230,7 +220,7 @@ export default function SettingsPage() {
                                     const file = e.target.files?.[0];
                                     if (!file) return;
 
-                                    if (!confirm('WARNING: Importing a dictionary will REPLACE all your current terms and progress. This cannot be undone. Are you sure you want to proceed?')) {
+                                    if (!confirm(t('importConfirm'))) {
                                         e.target.value = ''; // Reset input
                                         return;
                                     }
@@ -240,11 +230,11 @@ export default function SettingsPage() {
                                         const data = JSON.parse(text);
                                         const { importDatabase } = await import('@/lib/db');
                                         await importDatabase(data);
-                                        alert('Dictionary imported successfully!');
+                                        alert(t('importSuccess'));
                                         window.location.reload();
                                     } catch (err) {
                                         console.error(err);
-                                        alert('Failed to import dictionary. Please check the file format.');
+                                        alert(t('importFailed'));
                                     }
                                     e.target.value = ''; // Reset input
                                 }}
@@ -255,7 +245,7 @@ export default function SettingsPage() {
                                 className="w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all bg-zinc-800 text-white hover:bg-zinc-700 active:scale-[0.98]"
                             >
                                 <RefreshCcw size={20} className="rotate-90" />
-                                Import Dictionary from JSON
+                                {t('importDictionary')}
                             </button>
                         </div>
 
@@ -265,7 +255,7 @@ export default function SettingsPage() {
                             className="w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all border border-red-500/20 text-red-400 hover:bg-red-500/10 active:scale-[0.98]"
                         >
                             <RefreshCcw size={20} />
-                            Reset All Progress Statistics
+                            {t('resetProgress')}
                         </button>
                     </div>
                 </div>

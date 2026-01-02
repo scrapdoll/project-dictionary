@@ -57,6 +57,7 @@ export const studyService = {
                     apiBaseUrl: 'https://api.openai.com/v1',
                     model: 'gpt-4o',
                     aiEnabled: true,
+                    language: 'en-US',
                     xp: xpGain
                 });
             }

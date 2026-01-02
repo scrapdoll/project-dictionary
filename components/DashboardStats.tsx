@@ -7,9 +7,13 @@ import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell } from 'rechar
 import { motion } from 'framer-motion';
 import { Sparkles, Trophy, Target, Library } from 'lucide-react';
 import { useIsMounted } from '@/hooks/useIsMounted';
+import { useT } from '@/lib/useTranslations';
+import { useT as useCommonT } from '@/lib/useTranslations';
 
 export default function DashboardStats() {
     const isMounted = useIsMounted();
+    const t = useT('dashboard');
+    const tCommon = useCommonT('common');
     const allProgress = useLiveQuery(() => db.progress.toArray());
     const [stats, setStats] = useState({
         total: 0,
@@ -54,7 +58,7 @@ export default function DashboardStats() {
             >
                 <div className="flex items-center gap-2 mb-6 text-zinc-400">
                     <Target size={18} />
-                    <span className="font-medium">Knowledge Overview</span>
+                    <span className="font-medium">{t('stats.knowledgeOverview')}</span>
                 </div>
                 <div className="w-full h-[200px]">
                     <ResponsiveContainer width="100%" height="100%">
@@ -99,11 +103,11 @@ export default function DashboardStats() {
                     </div>
                     <div className="flex justify-between items-end mb-4">
                         <div className="space-y-1">
-                            <p className="text-zinc-500 text-sm font-medium">Rank</p>
-                            <p className="text-2xl font-bold">Level {stats.level}</p>
+                            <p className="text-zinc-500 text-sm font-medium">{t('stats.rank')}</p>
+                            <p className="text-2xl font-bold">{t('stats.level')} {stats.level}</p>
                         </div>
                         <div className="text-right">
-                            <span className="text-xs text-zinc-500 font-mono">{stats.xp} / {(stats.level) * 100} XP</span>
+                            <span className="text-xs text-zinc-500 font-mono">{stats.xp} / {(stats.level) * 100} {t('stats.xp')}</span>
                         </div>
                     </div>
                     <div className="h-2 bg-zinc-800/50 rounded-full overflow-hidden">
@@ -127,7 +131,7 @@ export default function DashboardStats() {
                         </div>
                         <div className="text-center">
                             <p className="text-2xl font-bold">{stats.total}</p>
-                            <p className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Total Terms</p>
+                            <p className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">{t('stats.totalTerms')}</p>
                         </div>
                     </motion.div>
 
@@ -142,7 +146,7 @@ export default function DashboardStats() {
                         </div>
                         <div className="text-center">
                             <p className="text-2xl font-bold">{stats.mastered}</p>
-                            <p className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Mastered</p>
+                            <p className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">{tCommon('mastery.mastered')}</p>
                         </div>
                     </motion.div>
                 </div>

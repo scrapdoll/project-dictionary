@@ -6,9 +6,11 @@ import { Plus, Book, Type, MessageSquare } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
 import { motion } from 'framer-motion';
+import { useT } from '@/lib/useTranslations';
 
 export default function AddPage() {
     const router = useRouter();
+    const t = useT('addTerm');
     const [formData, setFormData] = useState({
         content: '',
         definition: '',
@@ -51,8 +53,12 @@ export default function AddPage() {
             className="max-w-2xl mx-auto space-y-10 pt-10"
         >
             <div className="space-y-3 text-center">
-                <h1 className="text-4xl font-extrabold tracking-tight">Expand <span className="text-glow">Lexicon</span></h1>
-                <p className="text-zinc-500 font-medium tracking-wide uppercase text-xs">Commit new knowledge to memory</p>
+                <h1 className="text-4xl font-extrabold tracking-tight">
+                    {t.rich('title', {
+                        glow: (chunks) => <span className="text-glow">{chunks}</span>
+                    })}
+                </h1>
+                <p className="text-zinc-500 font-medium tracking-wide uppercase text-xs">{t('subtitle')}</p>
             </div>
 
             <form onSubmit={handleSubmit} className="glass-card p-8 space-y-8 relative overflow-hidden">
@@ -63,14 +69,14 @@ export default function AddPage() {
                     <div className="space-y-2">
                         <label className="flex items-center gap-2 text-sm font-bold text-zinc-300">
                             <Type size={16} className="text-blue-400" />
-                            Term or Concept
+                            {t('fields.term.label')}
                         </label>
                         <input
                             type="text"
                             autoFocus
                             required
                             className="glass-input text-xl font-bold py-4"
-                            placeholder="e.g. Epistemology"
+                            placeholder={t('fields.term.placeholder')}
                             value={formData.content}
                             onChange={e => setFormData(prev => ({ ...prev, content: e.target.value }))}
                         />
@@ -79,11 +85,11 @@ export default function AddPage() {
                     <div className="space-y-2">
                         <label className="flex items-center gap-2 text-sm font-bold text-zinc-300">
                             <Book size={16} className="text-indigo-400" />
-                            Definition
+                            {t('fields.definition.label')}
                         </label>
                         <textarea
                             className="glass-input min-h-[120px] resize-none"
-                            placeholder="The philosophy of knowledge..."
+                            placeholder={t('fields.definition.placeholder')}
                             value={formData.definition}
                             onChange={e => setFormData(prev => ({ ...prev, definition: e.target.value }))}
                         />
@@ -92,11 +98,11 @@ export default function AddPage() {
                     <div className="space-y-2">
                         <label className="flex items-center gap-2 text-sm font-bold text-zinc-300">
                             <MessageSquare size={16} className="text-purple-400" />
-                            Context / Usage
+                            {t('fields.context.label')}
                         </label>
                         <textarea
                             className="glass-input min-h-[100px] resize-none"
-                            placeholder="Where did you see this? How is it used?"
+                            placeholder={t('fields.context.placeholder')}
                             value={formData.context}
                             onChange={e => setFormData(prev => ({ ...prev, context: e.target.value }))}
                         />
@@ -109,7 +115,7 @@ export default function AddPage() {
                         className="w-full py-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold flex items-center justify-center gap-2 hover:shadow-[0_0_25px_rgba(59,130,246,0.3)] transition-all active:scale-[0.98]"
                     >
                         <Plus size={22} strokeWidth={3} />
-                        Commit to Memory
+                        {t('submit')}
                     </button>
                 </div>
             </form>

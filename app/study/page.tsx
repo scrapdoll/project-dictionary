@@ -2,8 +2,11 @@
 
 import StudySession from '@/components/StudySession';
 import { motion } from 'framer-motion';
+import { useT } from '@/lib/useTranslations';
 
 export default function StudyPage() {
+    const t = useT('study');
+
     return (
         <motion.div
             initial={{ opacity: 0 }}
@@ -11,8 +14,8 @@ export default function StudyPage() {
             className="max-w-3xl mx-auto"
         >
             <div className="mb-8 text-center">
-                <h1 className="text-3xl font-bold text-gradient mb-2">Study Session</h1>
-                <p className="text-gray-400">Focus on recalling what you've learned.</p>
+                <h1 className="text-3xl font-bold text-gradient mb-2">{t('title')}</h1>
+                <p className="text-gray-400">{t('subtitle')}</p>
             </div>
 
             <StudySession />

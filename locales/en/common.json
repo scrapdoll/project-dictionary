@@ -1,0 +1,171 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "study": "Study",
+    "library": "Library",
+    "addTerm": "Add Term",
+    "settings": "Settings"
+  },
+  "dashboard": {
+    "title": "AI-Powered SRS",
+    "brand": "Neuro<glow>Lex</glow>",
+    "tagline": "The ultimate dictionary for the modern learner. ",
+    "description": "Stop forgetting and start <highlight>mastering</highlight> with AI-driven spaced repetition.",
+    "yourPerformance": "Your Performance",
+    "startSession": "Start Session",
+    "enlargeDictionary": "Enlarge Dictionary",
+    "stats": {
+      "knowledgeOverview": "Knowledge Overview",
+      "rank": "Rank",
+      "level": "Level",
+      "xp": "XP",
+      "totalTerms": "Total Terms",
+      "mastered": "Mastered"
+    }
+  },
+  "addTerm": {
+    "title": "Expand <glow>Lexicon</glow>",
+    "subtitle": "Commit new knowledge to memory",
+    "fields": {
+      "term": {
+        "label": "Term or Concept",
+        "placeholder": "e.g. Epistemology"
+      },
+      "definition": {
+        "label": "Definition",
+        "placeholder": "The philosophy of knowledge..."
+      },
+      "context": {
+        "label": "Context / Usage",
+        "placeholder": "Where did you see this? How is it used?"
+      }
+    },
+    "submit": "Commit to Memory"
+  },
+  "library": {
+    "title": "Library <glow>Engine</glow>",
+    "tagline": "Manage and analyze your knowledge base",
+    "searchPlaceholder": "Search within lexicon...",
+    "confirmDelete": "Are you sure you want to delete this term? This action cannot be undone.",
+    "confirmReset": "Are you sure you want to reset progress for this term?",
+    "noPatternsFound": "No neural patterns found matching your search.",
+    "card": {
+      "resetProgress": "Reset Neural Pattern",
+      "delete": "Delete from Neural Base"
+    }
+  },
+  "settings": {
+    "title": "System <glow>Config</glow>",
+    "tagline": "Bridge the gap between brain and AI",
+    "neuralEngine": "Neural Engine",
+    "neuralEngineDescription": "Enable AI-powered quizzing and grading",
+    "language": "Interface Language",
+    "apiEndpoint": "API Endpoint",
+    "apiEndpointPlaceholder": "https://api.openai.com/v1",
+    "accessToken": "Access Token",
+    "accessTokenPlaceholder": "sk-••••••••••••••••••••••••",
+    "intelligenceModel": "Intelligence Model",
+    "intelligenceModelPlaceholder": "gpt-4o",
+    "keysWarning": "Keys are stored locally in IndexedDB. Never shared.",
+    "synchronize": "Synchronize Configuration",
+    "done": "Done!",
+    "dataManagement": "Data Management",
+    "exportDictionary": "Export Dictionary to JSON",
+    "importConfirm": "WARNING: Importing a dictionary will REPLACE all your current terms and progress. This cannot be undone. Are you sure you want to proceed?",
+    "importSuccess": "Dictionary imported successfully!",
+    "importFailed": "Failed to import dictionary. Please check the file format.",
+    "importDictionary": "Import Dictionary from JSON",
+    "resetProgress": "Reset All Progress Statistics",
+    "resetProgressConfirm": "Are you sure you want to reset ALL progress statistics? This will mark all words as \"New\" and clear your review history. This action cannot be undone.",
+    "progressReset": "All progress has been reset."
+  },
+  "study": {
+    "title": "Study Session",
+    "subtitle": "Focus on recalling what you've learned.",
+    "session": {
+      "initializing": "Initializing Neural Link...",
+      "initiate": "Initiate Neural Link",
+      "selectProtocol": "Select your preferred reinforcement protocol",
+      "disruption": "Neural Link Disruption",
+      "unexpectedError": "An unexpected error occurred during synchronization.",
+      "retry": "Retry Initialization",
+      "verifyConfig": "Verify Configuration",
+      "syncComplete": "Sync Complete",
+      "allReinforced": "All neural pathways have been reinforced for today.",
+      "returnHub": "Return to Hub",
+      "remaining": "Remaining",
+      "activeSync": "Active Sync",
+      "neuralEvaluation": "Neural Evaluation",
+      "analyzing": "Analyzing semantic accuracy..."
+    },
+    "quizType": {
+      "auto": "Auto (Dynamic)",
+      "multipleChoice": "Multiple Choice",
+      "cloze": "Fill in the Blank",
+      "scenario": "Complex Scenario",
+      "definition": "Context Definition",
+      "context": "Sentence Application"
+    },
+    "mode": {
+      "ai": "AI Agent Mode",
+      "aiDescription": "Advanced simulation with dynamic scenarios and AI-graded responses for deeper semantic encoding.",
+      "aiReward": "High XP Reward",
+      "standard": "Standard Review",
+      "standardDescription": "Classic flashcard-style repetition optimized for speed and rapid recall testing.",
+      "standardEfficiency": "Standard Efficiency"
+    },
+    "card": {
+      "aiContext": "AI Context Injection",
+      "placeholder": "...",
+      "enterResponse": "Enter your response...",
+      "transmit": "Transmit Result",
+      "subject": "Subject Identifier",
+      "reveal": "Reveal Pattern"
+    },
+    "feedback": {
+      "gradeScore": "Grade Score",
+      "experience": "Experience",
+      "continue": "Continue Training",
+      "internalDefinition": "Internal Definition",
+      "undefined": "Undefined.",
+      "blackout": "Blackout (0)",
+      "difficult": "Difficult (3)",
+      "correct": "Correct (4)",
+      "perfect": "Perfect (5)"
+    }
+  },
+  "common": {
+    "buttons": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "submit": "Submit",
+      "confirm": "Confirm",
+      "continue": "Continue",
+      "retry": "Retry"
+    },
+    "status": {
+      "loading": "Loading...",
+      "saved": "Saved!",
+      "error": "Error"
+    },
+    "validation": {
+      "required": "This field is required"
+    },
+    "mastery": {
+      "new": "New",
+      "learning": "Learning",
+      "learned": "Learned",
+      "mastered": "Mastered"
+    },
+    "nextReview": "Next Review",
+    "lastReview": "Last Review",
+    "level": "Level",
+    "reps": "Reps",
+    "interval": "Interval",
+    "days": "Days",
+    "na": "N/A",
+    "noDefinition": "No definition provided.",
+    "context": "Context"
+  }
+}

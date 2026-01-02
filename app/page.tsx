@@ -4,8 +4,11 @@ import DashboardStats from '@/components/DashboardStats';
 import Link from 'next/link';
 import { ChevronRight, Brain, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useT } from '@/lib/useTranslations';
 
 export default function Home() {
+  const t = useT('dashboard');
+
   return (
     <div className="space-y-12 pb-12">
       <header className="relative py-12 text-center md:py-20 overflow-hidden">
@@ -19,7 +22,7 @@ export default function Home() {
           className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-widest mb-6"
         >
           <Zap size={12} className="fill-current" />
-          AI-Powered SRS
+          {t('title')}
         </motion.div>
 
         <motion.h1
@@ -28,7 +31,9 @@ export default function Home() {
           transition={{ duration: 0.6 }}
           className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6"
         >
-          Neuro<span className="text-glow">Lex</span>
+          {t.rich('brand', {
+            glow: (chunks) => <span className="text-glow">{chunks}</span>
+          })}
         </motion.h1>
 
         <motion.p
@@ -37,15 +42,16 @@ export default function Home() {
           transition={{ duration: 0.6, delay: 0.1 }}
           className="text-lg md:text-xl text-zinc-400 max-w-xl mx-auto leading-relaxed"
         >
-          The ultimate dictionary for the modern learner.
-          Stop forgetting and start <span className="text-zinc-200">mastering</span> with AI-driven spaced repetition.
+          {t('tagline')} {t.rich('description', {
+            highlight: (chunks) => <span className="text-zinc-200">{chunks}</span>
+          })}
         </motion.p>
       </header>
 
       <section className="space-y-6">
         <div className="flex items-center gap-2 px-1">
           <Brain size={20} className="text-indigo-400" />
-          <h2 className="text-xl font-bold">Your Performance</h2>
+          <h2 className="text-xl font-bold">{t('yourPerformance')}</h2>
         </div>
         <DashboardStats />
       </section>
@@ -60,14 +66,14 @@ export default function Home() {
           href="/study"
           className="w-full md:w-auto px-8 py-4 rounded-2xl bg-white text-black font-bold flex items-center justify-center gap-2 hover:bg-zinc-200 transition-all active:scale-95 group shadow-[0_0_30px_rgba(255,255,255,0.15)]"
         >
-          Start Session
+          {t('startSession')}
           <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
         </Link>
         <Link
           href="/add"
           className="w-full md:w-auto px-8 py-4 rounded-2xl bg-zinc-800 text-white font-bold flex items-center justify-center gap-2 hover:bg-zinc-700 transition-all active:scale-95"
         >
-          Enlarge Dictionary
+          {t('enlargeDictionary')}
         </Link>
       </motion.div>
     </div>

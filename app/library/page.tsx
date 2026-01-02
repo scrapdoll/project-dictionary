@@ -7,9 +7,13 @@ import { Search, Calendar, History, Trash2, ChevronRight, Zap, Target, RefreshCw
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useIsMounted } from '@/hooks/useIsMounted';
+import { useT } from '@/lib/useTranslations';
+import { useT as useCommonT } from '@/lib/useTranslations';
 
 export default function LibraryPage() {
     const isMounted = useIsMounted();
+    const t = useT('library');
+    const tCommon = useCommonT('common');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedTermId, setSelectedTermId] = useState<string | null>(null);
 
@@ -33,7 +37,7 @@ export default function LibraryPage() {
 
     const handleDelete = async (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
-        if (confirm('Are you sure you want to delete this term? This action cannot be undone.')) {
+        if (confirm(t('confirmDelete'))) {
             await db.transaction('rw', db.terms, db.progress, async () => {
                 await db.terms.delete(id);
                 await db.progress.delete(id);
@@ -44,7 +48,7 @@ export default function LibraryPage() {
 
     const handleResetProgress = async (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
-        if (confirm('Are you sure you want to reset progress for this term?')) {
+        if (confirm(t('confirmReset'))) {
             await db.progress.put({
                 termId: id,
                 nextReview: Date.now(),
@@ -57,7 +61,7 @@ export default function LibraryPage() {
     };
 
     const formatDate = (ts: number | undefined) => {
-        if (!ts) return 'N/A';
+        if (!ts) return tCommon('na');
         return new Date(ts).toLocaleDateString(undefined, {
             month: 'short',
             day: 'numeric',
@@ -69,24 +73,28 @@ export default function LibraryPage() {
 
     const getMastery = (reps: number = 0, interval: number = 0) => {
         // Arbitrary mastery level based on repetitions and interval
-        if (interval > 30) return { label: 'Mastered', color: 'text-emerald-400', bg: 'bg-emerald-500/10' };
-        if (reps > 3) return { label: 'Learned', color: 'text-blue-400', bg: 'bg-blue-500/10' };
-        if (reps > 0) return { label: 'Learning', color: 'text-amber-400', bg: 'bg-amber-500/10' };
-        return { label: 'New', color: 'text-zinc-500', bg: 'bg-zinc-500/10' };
+        if (interval > 30) return { label: tCommon('mastery.mastered'), color: 'text-emerald-400', bg: 'bg-emerald-500/10' };
+        if (reps > 3) return { label: tCommon('mastery.learned'), color: 'text-blue-400', bg: 'bg-blue-500/10' };
+        if (reps > 0) return { label: tCommon('mastery.learning'), color: 'text-amber-400', bg: 'bg-amber-500/10' };
+        return { label: tCommon('mastery.new'), color: 'text-zinc-500', bg: 'bg-zinc-500/10' };
     };
 
     return (
         <div className="space-y-8 pb-12">
             <div className="space-y-3">
-                <h1 className="text-4xl font-extrabold tracking-tight">Library <span className="text-glow">Engine</span></h1>
-                <p className="text-zinc-500 font-medium tracking-wide uppercase text-xs">Manage and analyze your knowledge base</p>
+                <h1 className="text-4xl font-extrabold tracking-tight">
+                    {t.rich('title', {
+                        glow: (chunks) => <span className="text-glow">{chunks}</span>
+                    })}
+                </h1>
+                <p className="text-zinc-500 font-medium tracking-wide uppercase text-xs">{t('tagline')}</p>
             </div>
 
             <div className="relative group">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 transition-colors group-focus-within:text-blue-400" size={20} />
                 <input
                     type="text"
-                    placeholder="Search within lexicon..."
+                    placeholder={t('searchPlaceholder')}
                     className="glass-input pl-12"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -123,7 +131,7 @@ export default function LibraryPage() {
                                 </div>
                                 <div className="flex items-center gap-4">
                                     <div className="text-right hidden md:block">
-                                        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Next Review</p>
+                                        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{tCommon('nextReview')}</p>
                                         <p className="text-xs font-medium text-zinc-300">{formatDate(item.progress?.nextReview)}</p>
                                     </div>
                                     <ChevronRight size={20} className={cn("text-zinc-600 transition-transform duration-300", isSelected && "rotate-90")} />
@@ -140,13 +148,13 @@ export default function LibraryPage() {
                                     >
                                         <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
                                             <div className="space-y-6">
+                                            <div className="space-y-2">
+                                                <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Definition</p>
+                                                <p className="text-zinc-200 leading-relaxed">{item.definition || tCommon('noDefinition')}</p>
+                                            </div>
+                                            {item.context && (
                                                 <div className="space-y-2">
-                                                    <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Definition</p>
-                                                    <p className="text-zinc-200 leading-relaxed">{item.definition || "No definition provided."}</p>
-                                                </div>
-                                                {item.context && (
-                                                    <div className="space-y-2">
-                                                        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Context</p>
+                                                    <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{tCommon('context')}</p>
                                                         <p className="text-zinc-400 italic text-sm">"{item.context}"</p>
                                                     </div>
                                                 )}
@@ -155,45 +163,45 @@ export default function LibraryPage() {
                                                         onClick={(e) => handleResetProgress(item.id, e)}
                                                         className="flex items-center gap-2 text-zinc-400 text-sm font-bold hover:text-zinc-300 transition-colors"
                                                     >
-                                                        <RefreshCw size={16} /> Reset Neural Pattern
+                                                        <RefreshCw size={16} /> {t('card.resetProgress')}
                                                     </button>
                                                     <button
                                                         onClick={(e) => handleDelete(item.id, e)}
                                                         className="flex items-center gap-2 text-red-400 text-sm font-bold hover:text-red-300 transition-colors"
                                                     >
-                                                        <Trash2 size={16} /> Delete from Neural Base
+                                                        <Trash2 size={16} /> {t('card.delete')}
                                                     </button>
                                                 </div>
                                             </div>
 
                                             <div className="grid grid-cols-2 gap-4">
-                                                <div className="glass-card p-4 space-y-2 border-white/10">
-                                                    <div className="flex items-center gap-2 text-blue-400">
-                                                        <Calendar size={14} />
-                                                        <span className="text-[10px] font-bold uppercase tracking-widest">Next Review</span>
-                                                    </div>
+                                            <div className="glass-card p-4 space-y-2 border-white/10">
+                                                <div className="flex items-center gap-2 text-blue-400">
+                                                    <Calendar size={14} />
+                                                    <span className="text-[10px] font-bold uppercase tracking-widest">{tCommon('nextReview')}</span>
+                                                </div>
                                                     <p className="text-sm font-bold">{formatDate(item.progress?.nextReview)}</p>
                                                 </div>
-                                                <div className="glass-card p-4 space-y-2 border-white/10">
-                                                    <div className="flex items-center gap-2 text-indigo-400">
-                                                        <History size={14} />
-                                                        <span className="text-[10px] font-bold uppercase tracking-widest">Last Review</span>
-                                                    </div>
+                                            <div className="glass-card p-4 space-y-2 border-white/10">
+                                                <div className="flex items-center gap-2 text-indigo-400">
+                                                    <History size={14} />
+                                                    <span className="text-[10px] font-bold uppercase tracking-widest">{tCommon('lastReview')}</span>
+                                                </div>
                                                     <p className="text-sm font-bold">{formatDate(lastReview || undefined)}</p>
                                                 </div>
-                                                <div className="glass-card p-4 space-y-2 border-white/10">
-                                                    <div className="flex items-center gap-2 text-purple-400">
-                                                        <Zap size={14} />
-                                                        <span className="text-[10px] font-bold uppercase tracking-widest">Level</span>
-                                                    </div>
-                                                    <p className="text-sm font-bold">{item.progress?.repetition || 0} Reps</p>
+                                            <div className="glass-card p-4 space-y-2 border-white/10">
+                                                <div className="flex items-center gap-2 text-purple-400">
+                                                    <Zap size={14} />
+                                                    <span className="text-[10px] font-bold uppercase tracking-widest">{tCommon('level')}</span>
                                                 </div>
-                                                <div className="glass-card p-4 space-y-2 border-white/10">
-                                                    <div className="flex items-center gap-2 text-emerald-400">
-                                                        <Target size={14} />
-                                                        <span className="text-[10px] font-bold uppercase tracking-widest">Interval</span>
-                                                    </div>
-                                                    <p className="text-sm font-bold">{item.progress?.interval || 0} Days</p>
+                                                <p className="text-sm font-bold">{item.progress?.repetition || 0} {tCommon('reps')}</p>
+                                            </div>
+                                            <div className="glass-card p-4 space-y-2 border-white/10">
+                                                <div className="flex items-center gap-2 text-emerald-400">
+                                                    <Target size={14} />
+                                                    <span className="text-[10px] font-bold uppercase tracking-widest">{tCommon('interval')}</span>
+                                                </div>
+                                                <p className="text-sm font-bold">{item.progress?.interval || 0} {tCommon('days')}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -206,7 +214,7 @@ export default function LibraryPage() {
 
                 {(!filteredData || filteredData.length === 0) && (
                     <div className="text-center py-20 glass-card">
-                        <p className="text-zinc-500 italic">No neural patterns found matching your search.</p>
+                        <p className="text-zinc-500 italic">{t('noPatternsFound')}</p>
                     </div>
                 )}
             </div>
