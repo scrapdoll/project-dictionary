@@ -21,6 +21,8 @@ export default function StudySession() {
         evaluation,
         xpReward,
         errorMsg,
+        preferredAiType,
+        setPreferredAiType,
         submitAnswer,
         manualGrade,
         handleNext,
@@ -47,6 +49,29 @@ export default function StudySession() {
                         Initiate Neural Link
                     </h2>
                     <p className="text-zinc-400 text-lg">Select your preferred reinforcement protocol</p>
+                </div>
+
+                <div className="flex flex-wrap justify-center gap-3 mb-10">
+                    {[
+                        { id: 'auto', label: 'Auto (Dynamic)', icon: Sparkles },
+                        { id: 'multiple_choice', label: 'Multiple Choice', icon: Zap },
+                        { id: 'cloze', label: 'Fill in the Blank', icon: Sparkles },
+                        { id: 'scenario', label: 'Complex Scenario', icon: Brain },
+                        { id: 'definition', label: 'Context Definition', icon: Sparkles },
+                        { id: 'context', label: 'Sentence Application', icon: Zap }
+                    ].map((type) => (
+                        <button
+                            key={type.id}
+                            onClick={() => setPreferredAiType(type.id as any)}
+                            className={`px-4 py-2 rounded-xl border text-sm font-bold transition-all flex items-center gap-2 ${preferredAiType === type.id
+                                ? 'bg-blue-500 border-blue-400 text-white shadow-lg shadow-blue-500/20'
+                                : 'bg-white/5 border-white/10 text-zinc-400 hover:bg-white/10 hover:border-white/20'
+                                }`}
+                        >
+                            <type.icon size={14} />
+                            {type.label}
+                        </button>
+                    ))}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-3xl">

@@ -25,7 +25,30 @@ export function StudyCard({ term, aiQuiz, userAnswer, onUserAnswerChange, onSubm
                     <div className="flex items-center gap-2 text-blue-400 font-bold uppercase text-[10px] tracking-widest">
                         <Brain size={14} /> AI Context Injection
                     </div>
-                    <p className="text-2xl font-bold leading-tight tracking-tight text-zinc-100">{aiQuiz.question}</p>
+                    {aiQuiz.type === 'cloze' && aiQuiz.question.includes('____') ? (
+                        <div className="text-2xl font-bold leading-relaxed tracking-tight text-zinc-100">
+                            {aiQuiz.question.split('____').map((part, i, array) => (
+                                <span key={i}>
+                                    {part}
+                                    {i < array.length - 1 && (
+                                        <input
+                                            type="text"
+                                            className="mx-2 px-3 py-1 bg-white/10 border-b-2 border-blue-500/50 focus:border-blue-500 outline-none rounded-md transition-all text-blue-400 placeholder:text-blue-500/30"
+                                            style={{ width: `${Math.max(userAnswer.length, 3) + 1}ch` }}
+                                            placeholder="..."
+                                            value={userAnswer}
+                                            onChange={e => onUserAnswerChange(e.target.value)}
+                                            onKeyDown={e => e.key === 'Enter' && userAnswer.trim() && onSubmit()}
+                                            autoFocus
+                                        />
+                                    )}
+                                </span>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-2xl font-bold leading-tight tracking-tight text-zinc-100">{aiQuiz.question}</p>
+                    )}
+
                     {aiQuiz.type === 'multiple_choice' && aiQuiz.options ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {aiQuiz.options.map((option, idx) => (
@@ -51,7 +74,7 @@ export function StudyCard({ term, aiQuiz, userAnswer, onUserAnswerChange, onSubm
                                 </button>
                             ))}
                         </div>
-                    ) : (
+                    ) : aiQuiz.type !== 'cloze' || !aiQuiz.question.includes('____') ? (
                         <textarea
                             className="glass-input min-h-[160px] text-lg leading-relaxed"
                             placeholder="Enter your response..."
@@ -59,7 +82,7 @@ export function StudyCard({ term, aiQuiz, userAnswer, onUserAnswerChange, onSubm
                             onChange={e => onUserAnswerChange(e.target.value)}
                             autoFocus
                         />
-                    )}
+                    ) : null}
                     <button onClick={onSubmit} className="w-full py-5 rounded-2xl bg-white text-black font-bold flex items-center justify-center gap-2 hover:bg-zinc-200 transition-all active:scale-[0.98] shadow-2xl">
                         Transmit Result
                         <Send size={18} />

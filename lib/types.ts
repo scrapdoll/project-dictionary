@@ -27,7 +27,7 @@ export interface Settings {
 
 export interface QuizGeneration {
     question: string;
-    type: 'definition' | 'context' | 'scenario' | 'multiple_choice';
+    type: 'definition' | 'context' | 'scenario' | 'multiple_choice' | 'cloze';
     options?: string[]; // 4 options for multiple choice
 }
 

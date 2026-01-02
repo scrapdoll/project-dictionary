@@ -73,6 +73,84 @@ describe('AI Lib', () => {
         expect(result.options).toHaveLength(4);
     });
 
+    it('generateQuiz respects preferredType in prompt', async () => {
+        const mockResponse: QuizGeneration = {
+            question: "Scenario Question?",
+            type: "scenario"
+        };
+
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({
+                choices: [
+                    {
+                        message: {
+                            content: JSON.stringify(mockResponse)
+                        }
+                    }
+                ]
+            })
+        });
+
+        await generateQuiz('Apple', 'A fruit', apiKey, model, baseUrl, 'en-US', 'scenario');
+
+        expect(mockFetch).toHaveBeenCalledWith('/api/ai-proxy', expect.objectContaining({
+            body: expect.stringContaining('The user PREFERS a "scenario" type question')
+        }));
+    });
+
+    it('generateQuiz respects preferredType "cloze" in prompt', async () => {
+        const mockResponse: QuizGeneration = {
+            question: "It is very ____ outside.",
+            type: "cloze"
+        };
+
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({
+                choices: [
+                    {
+                        message: {
+                            content: JSON.stringify(mockResponse)
+                        }
+                    }
+                ]
+            })
+        });
+
+        await generateQuiz('Apple', 'A fruit', apiKey, model, baseUrl, 'en-US', 'cloze');
+
+        expect(mockFetch).toHaveBeenCalledWith('/api/ai-proxy', expect.objectContaining({
+            body: expect.stringContaining('The user PREFERS a "cloze" type question')
+        }));
+    });
+
+    it('generateQuiz respects preferredType "definition" in prompt', async () => {
+        const mockResponse: QuizGeneration = {
+            question: "Define this term.",
+            type: "definition"
+        };
+
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({
+                choices: [
+                    {
+                        message: {
+                            content: JSON.stringify(mockResponse)
+                        }
+                    }
+                ]
+            })
+        });
+
+        await generateQuiz('Apple', 'A fruit', apiKey, model, baseUrl, 'en-US', 'definition');
+
+        expect(mockFetch).toHaveBeenCalledWith('/api/ai-proxy', expect.objectContaining({
+            body: expect.stringContaining('The user PREFERS a "definition" type question')
+        }));
+    });
+
     it('evaluateAnswer calls correct endpoint and returns parsed JSON', async () => {
         const mockResponse: QuizEvaluation = {
             grade: 5,

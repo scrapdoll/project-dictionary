@@ -3,18 +3,27 @@ import { QuizGeneration, QuizEvaluation } from './types';
 export type { QuizGeneration, QuizEvaluation };
 
 
-const SYSTEM_PROMPT_GENERATE = (term: string, context: string, language: string) => `
+const SYSTEM_PROMPT_GENERATE = (term: string, context: string, language: string, preferredType?: string) => `
 You are an expert language tutor. The user is learning the term "${term}".
 Context provided by user: "${context || 'None'}".
 Your output language is: "${language}".
-Generate a short, challenging quiz question to test their understanding of this term.
-You can use different types of questions: "scenario", "context", "definition", or "multiple_choice".
-If the type is "multiple_choice", you MUST provide 4 distinct options, including the correct one.
-Do not ask for a simple definition if context is provided; ask them to apply it or fill in the blank, or explain a nuance.
+
+${preferredType && preferredType !== 'auto' ? `The user PREFERS a "${preferredType}" type question. You MUST generate a question of type "${preferredType}".` : 'Generate a short, challenging quiz question to test their understanding of this term.'}
+
+Guidelines for question types:
+- "definition": Ask about the precise meaning, nuances, or how it differs from synonyms.
+- "context": Ask the user to apply the term in a specific sentence or explain its role in a given phrase.
+- "scenario": Create a mini role-play or a realistic situation where the user must use or identify the term.
+- "multiple_choice": Ask a question and provide 4 distinct options. One must be correct.
+- "cloze": Provide a sentence where the term "${term}" (or its form) is missing, replaced by "____". The user must identify the missing word.
+
+If the type is "multiple_choice", you MUST provide 4 distinct options in the "options" field.
+Do not ask for a simple definition if context is provided; ask them to apply it or explain a nuance.
+
 Return ONLY a JSON object with this shape:
 {
-  "question": "The question text (in ${language})",
-  "type": "scenario" | "multiple_choice" | "definition" | "context",
+  "question": "The question or cloze sentence text (in ${language})",
+  "type": "scenario" | "multiple_choice" | "definition" | "context" | "cloze",
   "options": ["option 1", "option 2", "option 3", "option 4"] // only if type is multiple_choice
 }
 `;
@@ -84,10 +93,11 @@ export async function generateQuiz(
     apiKey: string,
     model: string,
     baseUrl: string = 'https://api.openai.com/v1',
-    language: string = 'en-US'
+    language: string = 'en-US',
+    preferredType: QuizGeneration['type'] | 'auto' = 'auto'
 ): Promise<QuizGeneration> {
     const messages = [
-        { role: 'system', content: SYSTEM_PROMPT_GENERATE(term, context, language) },
+        { role: 'system', content: SYSTEM_PROMPT_GENERATE(term, context, language, preferredType) },
         { role: 'user', content: 'Generate a question now.' }
     ];
     return callLLM(messages, apiKey, model, baseUrl);

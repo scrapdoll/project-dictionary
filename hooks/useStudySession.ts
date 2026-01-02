@@ -17,6 +17,7 @@ export function useStudySession() {
     const [evaluation, setEvaluation] = useState<QuizEvaluation | null>(null);
     const [errorMsg, setErrorMsg] = useState('');
     const [xpReward, setXpReward] = useState(0);
+    const [preferredAiType, setPreferredAiType] = useState<QuizGeneration['type'] | 'auto'>('auto');
 
     function startSession(type: 'ai' | 'standard') {
         console.log("Starting session with type:", type);
@@ -73,7 +74,8 @@ export function useStudySession() {
                     currentSettings.apiKey,
                     currentSettings.model,
                     currentSettings.apiBaseUrl,
-                    currentSettings.language || 'en-US'
+                    currentSettings.language || 'en-US',
+                    preferredAiType
                 );
                 setAiQuiz(quiz);
                 setMode('question');
@@ -151,6 +153,8 @@ export function useStudySession() {
         evaluation,
         errorMsg,
         xpReward,
+        preferredAiType,
+        setPreferredAiType,
         submitAnswer,
         manualGrade,
         handleNext,
