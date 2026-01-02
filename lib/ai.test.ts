@@ -48,6 +48,31 @@ describe('AI Lib', () => {
         expect(result).toEqual(mockResponse);
     });
 
+    it('generateQuiz handles multiple choice type', async () => {
+        const mockResponse: QuizGeneration = {
+            question: "Choose correct meaning?",
+            type: "multiple_choice",
+            options: ["A", "B", "C", "D"]
+        };
+
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({
+                choices: [
+                    {
+                        message: {
+                            content: JSON.stringify(mockResponse)
+                        }
+                    }
+                ]
+            })
+        });
+
+        const result = await generateQuiz('Apple', 'A fruit', apiKey, model, baseUrl);
+        expect(result).toEqual(mockResponse);
+        expect(result.options).toHaveLength(4);
+    });
+
     it('evaluateAnswer calls correct endpoint and returns parsed JSON', async () => {
         const mockResponse: QuizEvaluation = {
             grade: 5,

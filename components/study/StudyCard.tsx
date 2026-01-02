@@ -26,13 +26,40 @@ export function StudyCard({ term, aiQuiz, userAnswer, onUserAnswerChange, onSubm
                         <Brain size={14} /> AI Context Injection
                     </div>
                     <p className="text-2xl font-bold leading-tight tracking-tight text-zinc-100">{aiQuiz.question}</p>
-                    <textarea
-                        className="glass-input min-h-[160px] text-lg leading-relaxed"
-                        placeholder="Enter your response..."
-                        value={userAnswer}
-                        onChange={e => onUserAnswerChange(e.target.value)}
-                        autoFocus
-                    />
+                    {aiQuiz.type === 'multiple_choice' && aiQuiz.options ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {aiQuiz.options.map((option, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => {
+                                        onUserAnswerChange(option);
+                                        // Auto-submit for better UX in mobile
+                                        setTimeout(onSubmit, 100);
+                                    }}
+                                    className={`p-4 rounded-xl text-left transition-all border ${userAnswer === option
+                                            ? 'bg-blue-500/20 border-blue-500 text-blue-400'
+                                            : 'bg-white/5 border-white/5 text-zinc-300 hover:bg-white/10'
+                                        }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] border ${userAnswer === option ? 'border-blue-500 bg-blue-500 text-white' : 'border-white/20'
+                                            }`}>
+                                            {String.fromCharCode(65 + idx)}
+                                        </div>
+                                        {option}
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    ) : (
+                        <textarea
+                            className="glass-input min-h-[160px] text-lg leading-relaxed"
+                            placeholder="Enter your response..."
+                            value={userAnswer}
+                            onChange={e => onUserAnswerChange(e.target.value)}
+                            autoFocus
+                        />
+                    )}
                     <button onClick={onSubmit} className="w-full py-5 rounded-2xl bg-white text-black font-bold flex items-center justify-center gap-2 hover:bg-zinc-200 transition-all active:scale-[0.98] shadow-2xl">
                         Transmit Result
                         <Send size={18} />

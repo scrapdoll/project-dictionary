@@ -8,11 +8,14 @@ You are an expert language tutor. The user is learning the term "${term}".
 Context provided by user: "${context || 'None'}".
 Your output language is: "${language}".
 Generate a short, challenging quiz question to test their understanding of this term.
+You can use different types of questions: "scenario", "context", "definition", or "multiple_choice".
+If the type is "multiple_choice", you MUST provide 4 distinct options, including the correct one.
 Do not ask for a simple definition if context is provided; ask them to apply it or fill in the blank, or explain a nuance.
 Return ONLY a JSON object with this shape:
 {
   "question": "The question text (in ${language})",
-  "type": "scenario"
+  "type": "scenario" | "multiple_choice" | "definition" | "context",
+  "options": ["option 1", "option 2", "option 3", "option 4"] // only if type is multiple_choice
 }
 `;
 
