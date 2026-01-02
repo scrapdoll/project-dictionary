@@ -36,4 +36,4 @@ export interface QuizEvaluation {
     correctAnswer: string;
 }
 
-export type StudyState = 'loading' | 'ready' | 'question' | 'evaluating' | 'feedback' | 'finished' | 'error';
+export type StudyState = 'selection' | 'loading' | 'ready' | 'question' | 'evaluating' | 'feedback' | 'finished' | 'error';
