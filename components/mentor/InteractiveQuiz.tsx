@@ -16,6 +16,7 @@ export function InteractiveQuiz({ quiz, onAnswer }: InteractiveQuizProps) {
     const [showResult, setShowResult] = useState(false);
     const [isCorrect, setIsCorrect] = useState(false);
     const [textAnswer, setTextAnswer] = useState('');
+    const [validationError, setValidationError] = useState<string | null>(null);
 
     const handleSubmit = async () => {
         const answer = selectedOption || textAnswer;
@@ -28,7 +29,20 @@ export function InteractiveQuiz({ quiz, onAnswer }: InteractiveQuizProps) {
 
         // For multiple choice, show immediate feedback
         if (quiz.type === 'multiple_choice' && quiz.options) {
-            const correctIndex = quiz.correctAnswer ?? 0;
+            // Validate correctAnswer is provided and within bounds
+            if (quiz.correctAnswer === undefined) {
+                setValidationError('Quiz configuration error: correct answer not specified');
+                setIsSubmitting(false);
+                return;
+            }
+
+            if (quiz.correctAnswer < 0 || quiz.correctAnswer >= quiz.options.length) {
+                setValidationError(`Quiz configuration error: correct answer index ${quiz.correctAnswer} is out of bounds (0-${quiz.options.length - 1})`);
+                setIsSubmitting(false);
+                return;
+            }
+
+            const correctIndex = quiz.correctAnswer;
             setIsCorrect(selectedOption === quiz.options[correctIndex]);
             setShowResult(true);
 
@@ -42,6 +56,12 @@ export function InteractiveQuiz({ quiz, onAnswer }: InteractiveQuizProps) {
     };
 
     if (quiz.type === 'multiple_choice' && quiz.options) {
+        // Validate quiz configuration at render time
+        const isConfigValid = quiz.correctAnswer !== undefined &&
+            quiz.correctAnswer >= 0 &&
+            quiz.correctAnswer < quiz.options.length;
+        const correctIndex = isConfigValid ? quiz.correctAnswer : 0;
+
         return (
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -55,10 +75,18 @@ export function InteractiveQuiz({ quiz, onAnswer }: InteractiveQuizProps) {
 
                 <h3 className="text-xl font-semibold">{quiz.question}</h3>
 
+                {/* Show validation error if quiz is misconfigured */}
+                {!isConfigValid && (
+                    <div className="p-4 rounded-xl bg-red-500/20 border border-red-500/50 text-red-400">
+                        {quiz.correctAnswer === undefined
+                            ? 'Quiz configuration error: correct answer not specified by AI'
+                            : `Quiz configuration error: correct answer index ${quiz.correctAnswer} is out of bounds (0-${quiz.options.length - 1})`}
+                    </div>
+                )}
+
                 <div className="space-y-2">
                     {quiz.options.map((option, index) => {
                         const isSelected = selectedOption === option;
-                        const correctIndex = quiz.correctAnswer ?? 0;
                         const showCorrect = showResult && index === correctIndex;
                         const showIncorrect = showResult && isSelected && index !== correctIndex;
 
@@ -105,10 +133,10 @@ export function InteractiveQuiz({ quiz, onAnswer }: InteractiveQuizProps) {
                     )}
                 </AnimatePresence>
 
-                {!showResult && (
+                {!showResult && !validationError && (
                     <button
                         onClick={handleSubmit}
-                        disabled={!selectedOption || isSubmitting}
+                        disabled={!selectedOption || isSubmitting || !isConfigValid}
                         className="w-full py-4 rounded-xl bg-blue-500 text-white font-bold hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                         {isSubmitting ? (
