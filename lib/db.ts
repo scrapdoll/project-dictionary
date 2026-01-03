@@ -4,6 +4,16 @@ import { Term, Progress, Settings, MentorChatSession, MentorChatMessage } from '
 
 export type { Term, Progress, Settings };
 
+// Type definition for database export format
+export interface DatabaseExport {
+    terms: Term[];
+    progress: Progress[];
+    mentorChatSessions?: MentorChatSession[];
+    mentorChatMessages?: MentorChatMessage[];
+    exportedAt: number;
+    version: number;
+}
+
 
 const db = new Dexie('DictionaryAgentDB') as Dexie & {
     terms: EntityTable<Term, 'id'>;
@@ -34,27 +44,52 @@ db.version(3).stores({
     mentorChatMessages: 'id, sessionId, timestamp'
 });
 
-export async function exportDatabase() {
-    const terms = await db.terms.toArray();
-    const progress = await db.progress.toArray();
+export async function exportDatabase(): Promise<DatabaseExport> {
+    const [terms, progress, mentorChatSessions, mentorChatMessages] = await Promise.all([
+        db.terms.toArray(),
+        db.progress.toArray(),
+        db.mentorChatSessions.toArray(),
+        db.mentorChatMessages.toArray(),
+    ]);
+
     return {
         terms,
         progress,
+        mentorChatSessions,
+        mentorChatMessages,
         exportedAt: Date.now(),
-        version: 1
+        version: 3
     };
 }
 
-export async function importDatabase(data: any) {
+export async function importDatabase(data: DatabaseExport) {
     if (!data.terms || !data.progress) {
-        throw new Error('Invalid backup file format');
+        throw new Error('Invalid backup file format: missing terms or progress');
     }
 
-    await db.transaction('rw', db.terms, db.progress, async () => {
+    // Determine which tables are included in the export (for backward compatibility)
+    const hasMentorData = data.mentorChatSessions && data.mentorChatMessages;
+    const tablesToClear = hasMentorData
+        ? [db.terms, db.progress, db.mentorChatSessions, db.mentorChatMessages]
+        : [db.terms, db.progress];
+
+    await db.transaction('rw', tablesToClear, async () => {
+        // Clear existing data
         await db.terms.clear();
         await db.progress.clear();
+        if (hasMentorData) {
+            await db.mentorChatSessions.clear();
+            await db.mentorChatMessages.clear();
+        }
+
+        // Import data
         await db.terms.bulkAdd(data.terms);
         await db.progress.bulkAdd(data.progress);
+
+        if (hasMentorData && data.mentorChatSessions && data.mentorChatMessages) {
+            await db.mentorChatSessions.bulkAdd(data.mentorChatSessions);
+            await db.mentorChatMessages.bulkAdd(data.mentorChatMessages);
+        }
     });
 }
 
