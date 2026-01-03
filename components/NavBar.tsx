@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { BookOpen, PlusCircle, Settings, LayoutDashboard, Library } from 'lucide-react';
+import { BookOpen, PlusCircle, Settings, LayoutDashboard, Library, Bot } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useT } from '@/lib/useTranslations';
 
@@ -15,6 +15,7 @@ export default function NavBar() {
         { href: '/', label: t('dashboard'), icon: LayoutDashboard },
         { href: '/study', label: t('study'), icon: BookOpen },
         { href: '/library', label: t('library'), icon: Library },
+        { href: '/mentor', label: t('mentor'), icon: Bot },
         { href: '/add', label: t('addTerm'), icon: PlusCircle },
         { href: '/settings', label: t('settings'), icon: Settings },
     ];

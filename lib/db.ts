@@ -1,6 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie';
 
-import { Term, Progress, Settings } from './types';
+import { Term, Progress, Settings, MentorChatSession, MentorChatMessage } from './types';
 
 export type { Term, Progress, Settings };
 
@@ -9,6 +9,8 @@ const db = new Dexie('DictionaryAgentDB') as Dexie & {
     terms: EntityTable<Term, 'id'>;
     progress: EntityTable<Progress, 'termId'>;
     settings: EntityTable<Settings, 'id'>;
+    mentorChatSessions: EntityTable<MentorChatSession, 'id'>;
+    mentorChatMessages: EntityTable<MentorChatMessage, 'id'>;
 };
 
 db.version(1).stores({
@@ -24,6 +26,12 @@ db.version(2).stores({
     return tx.table('settings').toCollection().modify(settings => {
         settings.xp = 0;
     });
+});
+
+// version 3 adds mentor chat tables
+db.version(3).stores({
+    mentorChatSessions: 'id, topic, createdAt, updatedAt',
+    mentorChatMessages: 'id, sessionId, timestamp'
 });
 
 export async function exportDatabase() {
