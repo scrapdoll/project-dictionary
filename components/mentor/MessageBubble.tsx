@@ -13,6 +13,11 @@ interface MessageBubbleProps {
 export function MessageBubble({ message }: MessageBubbleProps) {
     const isUser = message.role === 'user';
 
+    // Don't render messages without content
+    if (!message.content || message.content.trim().length === 0) {
+        return null;
+    }
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 10 }}
