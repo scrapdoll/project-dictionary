@@ -38,3 +38,38 @@ export interface QuizEvaluation {
 }
 
 export type StudyState = 'selection' | 'loading' | 'ready' | 'question' | 'evaluating' | 'feedback' | 'finished' | 'error';
+
+// Mentor/AI Chat types
+export type ChatState = 'idle' | 'sending' | 'receiving' | 'quiz' | 'evaluating' | 'error';
+
+export interface MentorChatMessage {
+    id: string;
+    sessionId: string;
+    role: 'user' | 'assistant' | 'system';
+    content: string;
+    timestamp: number;
+    quiz?: MentorQuiz;
+}
+
+export interface MentorChatSession {
+    id: string;
+    topic: string;
+    language: string;
+    createdAt: number;
+    updatedAt: number;
+    messageCount: number;
+    xpEarned: number;
+}
+
+export interface MentorQuiz {
+    id: string;
+    type: 'multiple_choice' | 'cloze' | 'short_answer';
+    question: string;
+    options?: string[];
+    completed: boolean;
+    userAnswer?: string;
+    evaluation?: {
+        grade: number;
+        feedback: string;
+    };
+}

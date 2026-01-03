@@ -3,6 +3,7 @@
     "dashboard": "Dashboard",
     "study": "Study",
     "library": "Library",
+    "mentor": "Mentor",
     "addTerm": "Add Term",
     "settings": "Settings"
   },
@@ -167,5 +168,19 @@
     "na": "N/A",
     "noDefinition": "No definition provided.",
     "context": "Context"
+  },
+  "mentor": {
+    "title": "AI Mentor",
+    "subtitle": "Learn anything with your personal AI tutor",
+    "sessions": {
+      "new": "New Chat",
+      "empty": "No sessions yet"
+    },
+    "input": {
+      "placeholder": "Ask me anything..."
+    },
+    "quiz": {
+      "continue": "Continue"
+    }
   }
 }
