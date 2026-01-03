@@ -28,7 +28,7 @@ export function InteractiveQuiz({ quiz, onAnswer }: InteractiveQuizProps) {
 
         // For multiple choice, show immediate feedback
         if (quiz.type === 'multiple_choice' && quiz.options) {
-            const correctIndex = 0; // First option is correct
+            const correctIndex = quiz.correctAnswer ?? 0;
             setIsCorrect(selectedOption === quiz.options[correctIndex]);
             setShowResult(true);
 
@@ -58,8 +58,9 @@ export function InteractiveQuiz({ quiz, onAnswer }: InteractiveQuizProps) {
                 <div className="space-y-2">
                     {quiz.options.map((option, index) => {
                         const isSelected = selectedOption === option;
-                        const showCorrect = showResult && index === 0;
-                        const showIncorrect = showResult && isSelected && index !== 0;
+                        const correctIndex = quiz.correctAnswer ?? 0;
+                        const showCorrect = showResult && index === correctIndex;
+                        const showIncorrect = showResult && isSelected && index !== correctIndex;
 
                         return (
                             <motion.button
