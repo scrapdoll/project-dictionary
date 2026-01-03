@@ -91,7 +91,7 @@ export function useMentorChat() {
         }
 
         return undefined;
-    }, [tools]);
+    }, [tools.setSocraticQuestion]);
 
     /**
      * Start a new mentor chat session
