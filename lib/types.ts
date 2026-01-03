@@ -63,7 +63,7 @@ export interface MentorChatSession {
 
 export interface MentorQuiz {
     id: string;
-    type: 'multiple_choice' | 'cloze' | 'short_answer';
+    type: 'multiple_choice' | 'cloze' | 'short_answer' | 'matching' | 'ordering';
     question: string;
     options?: string[];
     completed: boolean;
@@ -71,5 +71,69 @@ export interface MentorQuiz {
     evaluation?: {
         grade: number;
         feedback: string;
+        correctAnswer?: string;
     };
+    // For matching type
+    pairs?: { left: string; right: string }[];
+    // For ordering type
+    items?: string[];
+    correctOrder?: number[];
+}
+
+// Socratic mentor tool actions
+
+/**
+ * Data for add_term tool action
+ */
+export interface AddTermData {
+    term: string;
+    definition: string;
+    context: string;
+}
+
+/**
+ * Data for create_quiz tool action
+ */
+export interface CreateQuizData {
+    quizType: 'multiple_choice' | 'cloze' | 'short_answer' | 'matching' | 'ordering';
+    focus: string;
+    question?: string;
+    options?: string[];
+    pairs?: { left: string; right: string }[];
+    items?: string[];
+    correctOrder?: number[];
+}
+
+/**
+ * Data for highlight_concept tool action
+ */
+export interface HighlightConceptData {
+    concept: string;
+    importance: string;
+}
+
+/**
+ * Data for suggest_practice tool action
+ */
+export interface SuggestPracticeData {
+    exercise: string;
+    reason: string;
+}
+
+/**
+ * Discriminated union for tool actions
+ * Each action type has its own specific data shape
+ */
+export type MentorToolAction =
+    | { type: 'add_term'; data: AddTermData }
+    | { type: 'create_quiz'; data: CreateQuizData }
+    | { type: 'highlight_concept'; data: HighlightConceptData }
+    | { type: 'suggest_practice'; data: SuggestPracticeData };
+
+export interface SocraticMentorResponse {
+    message: string;
+    socraticQuestion?: string; // The guiding question for the user
+    toolAction?: MentorToolAction;
+    shouldCreateQuiz: boolean;
+    quiz?: Omit<MentorQuiz, 'id' | 'completed' | 'userAnswer' | 'evaluation'>;
 }

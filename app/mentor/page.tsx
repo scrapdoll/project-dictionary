@@ -16,15 +16,17 @@ export default function MentorPage() {
         messages,
         state,
         currentQuiz,
-        quizAnswer,
-        setQuizAnswer,
         error,
         startNewChat,
         loadSession,
         sendMessage,
         submitQuizAnswer,
         continueAfterQuiz,
-        clearError
+        clearError,
+        socraticQuestion,
+        toolAction,
+        termSuggestions,
+        addTermToDictionary
     } = useMentorChat();
 
     const [showNewTopicModal, setShowNewTopicModal] = useState(false);
@@ -117,10 +119,14 @@ export default function MentorPage() {
                     currentQuiz={currentQuiz}
                     state={state}
                     error={error}
+                    toolAction={toolAction}
+                    termSuggestions={termSuggestions}
                     onSendMessage={sendMessage}
                     onQuizAnswer={submitQuizAnswer}
                     onContinue={continueAfterQuiz}
                     onClearError={clearError}
+                    onAddTerm={addTermToDictionary}
+                    onDismissToolAction={() => {}}
                 />
             )}
 

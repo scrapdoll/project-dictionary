@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const { messages, apiKey, model, baseUrl } = body;
+        const { messages, apiKey, model, baseUrl, tools, toolChoice } = body;
 
         console.log("Proxying AI request to:", baseUrl);
 
@@ -17,18 +17,32 @@ export async function POST(req: NextRequest) {
 
         console.log("Constructed URL:", url);
 
+        const requestBody: any = {
+            model: model,
+            messages: messages,
+            temperature: 0.7
+        };
+
+        // Add tools if provided
+        if (tools && Array.isArray(tools)) {
+            requestBody.tools = tools;
+        }
+
+        // Add tool_choice if specified
+        if (toolChoice) {
+            requestBody.tool_choice = toolChoice;
+        } else if (tools && tools.length > 0) {
+            // Auto mode if tools are provided but no choice specified
+            requestBody.tool_choice = 'auto';
+        }
+
         const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${apiKey}`
             },
-            body: JSON.stringify({
-                model: model,
-                messages: messages,
-                temperature: 0.7,
-                response_format: { type: "json_object" }
-            })
+            body: JSON.stringify(requestBody)
         });
 
         if (!response.ok) {

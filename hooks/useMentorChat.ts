@@ -1,190 +1,280 @@
-import { useState, useCallback } from 'react';
+/**
+ * useMentorChat Hook
+ * Main orchestrator hook for the mentor chat system
+ *
+ * This hook composes smaller, focused hooks to provide a complete
+ * mentor chat experience with:
+ * - Socratic method teaching
+ * - Quiz generation and evaluation
+ * - Tool actions (add term, highlight concept, suggest practice)
+ * - Session management
+ *
+ * @example
+ * ```tsx
+ * function MentorChat() {
+ *   const {
+ *     messages,
+ *     state,
+ *     currentQuiz,
+ *     toolAction,
+ *     sendMessage,
+ *     submitQuizAnswer
+ *   } = useMentorChat();
+ *
+ *   return <ChatInterface {...} />;
+ * }
+ * ```
+ */
+
+import { useCallback, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
 import { mentorService } from '@/lib/services/mentor-service';
-import { mentorChatResponse, evaluateMentorQuiz } from '@/lib/ai-mentor';
-import { MentorChatMessage, MentorQuiz, MentorChatSession, ChatState } from '@/lib/types';
+import { socraticMentorResponse, evaluateSocraticQuiz, extractTermSuggestions } from '@/lib/ai-socratic';
+import { MentorChatMessage, MentorQuiz, ChatState, MentorToolAction } from '@/lib/types';
+import {
+    useMentorChatState,
+    useMentorQuizzes,
+    useMentorTools,
+    type TermSuggestion
+} from './mentor';
 
 export function useMentorChat() {
-    const settings = useLiveQuery(() => db.settings.get(1));
-    const [sessions, setSessions] = useState<MentorChatSession[]>([]);
-    const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
-    const [currentSession, setCurrentSession] = useState<MentorChatSession | null>(null);
-    const [messages, setMessages] = useState<MentorChatMessage[]>([]);
-    const [state, setState] = useState<ChatState>('idle');
-    const [currentQuiz, setCurrentQuiz] = useState<MentorQuiz | null>(null);
-    const [currentQuizMessageId, setCurrentQuizMessageId] = useState<string | null>(null);
-    const [quizAnswer, setQuizAnswer] = useState('');
-    const [error, setError] = useState('');
-    const [topic, setTopic] = useState('');
+    // Compose smaller hooks for focused state management
+    const chat = useMentorChatState();
+    const quizzes = useMentorQuizzes();
+    const tools = useMentorTools();
 
-    // Load sessions
+    // Get settings and terms from database
+    const settings = useLiveQuery(() => db.settings.get(1));
+    const allTerms = useLiveQuery(() => db.terms.toArray());
+
+    /**
+     * Load all chat sessions from the database
+     */
     const loadSessions = useCallback(async () => {
         const allSessions = await mentorService.getAllSessions();
-        setSessions(allSessions);
-    }, []);
+        chat.setSessions(allSessions);
+    }, [chat]);
 
-    // Start new chat
+    /**
+     * Start a new mentor chat session
+     */
     const startNewChat = useCallback(async (newTopic: string) => {
         if (!settings?.apiKey) {
-            setError('AI configuration required. Please check settings.');
-            setState('error');
+            chat.setError('AI configuration required. Please check settings.');
+            chat.setState('error');
             return;
         }
 
-        setState('sending');
-        setTopic(newTopic);
-        setMessages([]);
-        setCurrentQuiz(null);
-        setError('');
+        chat.setState('sending');
+        chat.setTopic(newTopic);
+        chat.setMessages([]);
+        quizzes.clearQuiz();
+        chat.setError('');
+        tools.clearSocraticQuestion();
+        tools.setToolAction(null);
 
         try {
             const sessionId = await mentorService.createSession(
                 newTopic,
                 settings.language || 'en-US'
             );
-            setCurrentSessionId(sessionId);
+            chat.setCurrentSessionId(sessionId);
 
             // Refresh sessions list
-            const allSessions = await mentorService.getAllSessions();
-            setSessions(allSessions);
+            await loadSessions();
 
-            // Initial AI greeting
-            const response = await mentorChatResponse(
+            // Initial AI greeting with Socratic method
+            const response = await socraticMentorResponse(
                 newTopic,
                 `Hello! I want to learn about ${newTopic}.`,
                 [],
                 settings.apiKey,
                 settings.model,
                 settings.apiBaseUrl,
-                settings.language || 'en-US'
+                settings.language || 'en-US',
+                (allTerms || []).map(t => t.content)
             );
 
-            // Add assistant greeting
-            await mentorService.addMessage(sessionId, {
-                role: 'assistant',
-                content: response.message,
-                timestamp: Date.now(),
-                quiz: response.shouldCreateQuiz && response.quiz ? {
-                    id: crypto.randomUUID(),
-                    ...response.quiz,
-                    completed: false
-                } : undefined
-            });
+            // Add assistant greeting with Socratic question
+            let messageContent = response.message;
+            if (response.socraticQuestion) {
+                messageContent += '\n\n' + response.socraticQuestion;
+                tools.setSocraticQuestion(response.socraticQuestion);
+            }
+
+            // Only save if we have actual content
+            if (messageContent && messageContent.trim().length > 0) {
+                await mentorService.addMessage(sessionId, {
+                    role: 'assistant',
+                    content: messageContent,
+                    timestamp: Date.now(),
+                    quiz: response.shouldCreateQuiz && response.quiz ? {
+                        id: crypto.randomUUID(),
+                        ...response.quiz,
+                        completed: false
+                    } : undefined
+                });
+            }
+
+            // Handle tool action if present
+            if (response.toolAction) {
+                tools.setToolAction(response.toolAction);
+            }
 
             await loadSessionMessages(sessionId);
-            setState('idle');
+            chat.setState('idle');
 
             if (response.shouldCreateQuiz && response.quiz) {
-                setCurrentQuiz({
-                    id: crypto.randomUUID(),
-                    ...response.quiz,
-                    completed: false
-                });
-                setState('quiz');
+                const quiz = quizzes.createQuiz(response.quiz);
+                quizzes.setCurrentQuiz(quiz);
+                chat.setState('quiz');
             }
         } catch (err) {
             console.error('Failed to start chat:', err);
-            setError('Failed to start mentor session. Please check your connection.');
-            setState('error');
+            chat.setError('Failed to start mentor session. Please check your connection.');
+            chat.setState('error');
         }
-    }, [settings]);
+    }, [settings, chat, quizzes, tools, allTerms, loadSessions]);
 
-    // Load existing session
+    /**
+     * Load an existing chat session
+     */
     const loadSession = useCallback(async (sessionId: string) => {
-        setCurrentSessionId(sessionId);
+        chat.setCurrentSessionId(sessionId);
         await loadSessionMessages(sessionId);
-    }, []);
+    }, [chat]);
 
+    /**
+     * Load messages for a session
+     */
     const loadSessionMessages = async (sessionId: string) => {
         const sessionMessages = await mentorService.getSessionMessages(sessionId);
-        setMessages(sessionMessages);
+        chat.setMessages(sessionMessages);
 
         const session = await mentorService.getSession(sessionId);
-        setCurrentSession(session || null);
-        setTopic(session?.topic || '');
+        chat.setCurrentSession(session || null);
+        chat.setTopic(session?.topic || '');
 
         // Find pending quiz
         const pendingQuiz = sessionMessages.find(m => m.quiz && !m.quiz.completed);
         if (pendingQuiz?.quiz) {
-            setCurrentQuiz(pendingQuiz.quiz);
-            setCurrentQuizMessageId(pendingQuiz.id);
-            setState('quiz');
+            quizzes.setCurrentQuiz(pendingQuiz.quiz);
+            quizzes.setQuizMessageId(pendingQuiz.id);
+            chat.setState('quiz');
         } else {
-            setState('idle');
+            chat.setState('idle');
         }
     };
 
-    // Send user message
+    /**
+     * Send a user message
+     */
     const sendMessage = useCallback(async (content: string) => {
-        if (!currentSessionId || !settings) return;
+        if (!chat.currentSessionId || !settings) return;
 
-        setState('sending');
-        setError('');
+        chat.setState('sending');
+        chat.setError('');
+        tools.clearSocraticQuestion();
+        tools.setToolAction(null);
 
         try {
             // Add user message
-            await mentorService.addMessage(currentSessionId, {
+            await mentorService.addMessage(chat.currentSessionId, {
                 role: 'user',
                 content,
                 timestamp: Date.now()
             });
 
-            setState('receiving');
+            chat.setState('receiving');
 
-            // Get AI response
-            const response = await mentorChatResponse(
-                topic,
+            // Get Socratic AI response
+            const response = await socraticMentorResponse(
+                chat.topic,
                 content,
-                messages,
+                chat.messages,
                 settings.apiKey,
                 settings.model,
                 settings.apiBaseUrl,
-                settings.language || 'en-US'
+                settings.language || 'en-US',
+                (allTerms || []).map(t => t.content)
             );
 
-            // Add assistant message
-            const messageId = await mentorService.addMessage(currentSessionId, {
-                role: 'assistant',
-                content: response.message,
-                timestamp: Date.now(),
-                quiz: response.shouldCreateQuiz && response.quiz ? {
-                    id: crypto.randomUUID(),
-                    ...response.quiz,
-                    completed: false
-                } : undefined
-            });
+            // Build message content with Socratic question
+            let messageContent = response.message;
+            if (response.socraticQuestion) {
+                messageContent += '\n\n' + response.socraticQuestion;
+                tools.setSocraticQuestion(response.socraticQuestion);
+            }
 
-            await loadSessionMessages(currentSessionId);
+            // Only add assistant message if we have actual content
+            let messageId: string | undefined;
+            if (messageContent && messageContent.trim().length > 0) {
+                messageId = await mentorService.addMessage(chat.currentSessionId, {
+                    role: 'assistant',
+                    content: messageContent,
+                    timestamp: Date.now(),
+                    quiz: response.shouldCreateQuiz && response.quiz ? {
+                        id: crypto.randomUUID(),
+                        ...response.quiz,
+                        completed: false
+                    } : undefined
+                });
+            }
+
+            // Handle tool action
+            if (response.toolAction) {
+                tools.setToolAction(response.toolAction);
+            }
+
+            // Extract term suggestions from conversation
+            const updatedMessages: MentorChatMessage[] = [
+                ...chat.messages,
+                {
+                    id: crypto.randomUUID(),
+                    sessionId: chat.currentSessionId,
+                    role: 'user' as const,
+                    content,
+                    timestamp: Date.now()
+                }
+            ];
+            const existingTermNames = (allTerms || []).map(t => t.content);
+            const suggestions = extractTermSuggestions(updatedMessages, existingTermNames);
+            if (suggestions.length > 0) {
+                tools.setTermSuggestions(suggestions);
+            }
+
+            await loadSessionMessages(chat.currentSessionId);
 
             if (response.shouldCreateQuiz && response.quiz) {
-                setCurrentQuiz({
-                    id: crypto.randomUUID(),
-                    ...response.quiz,
-                    completed: false
-                });
-                setCurrentQuizMessageId(messageId);
-                setState('quiz');
+                const quiz = quizzes.createQuiz(response.quiz);
+                quizzes.setCurrentQuiz(quiz);
+                quizzes.setQuizMessageId(messageId || null);
+                chat.setState('quiz');
             } else {
-                setState('idle');
+                chat.setState('idle');
             }
         } catch (err) {
             console.error('Failed to send message:', err);
-            setError('Failed to send message. Please try again.');
-            setState('error');
+            chat.setError('Failed to send message. Please try again.');
+            chat.setState('error');
         }
-    }, [currentSessionId, settings, messages, topic]);
+    }, [chat, quizzes, tools, settings, allTerms]);
 
-    // Submit quiz answer
-    const submitQuizAnswer = useCallback(async () => {
-        if (!currentQuiz || !currentSessionId || !currentQuizMessageId || !settings) return;
+    /**
+     * Submit a quiz answer for evaluation
+     */
+    const submitQuizAnswer = useCallback(async (answer: string) => {
+        if (!quizzes.currentQuiz || !chat.currentSessionId || !quizzes.quizMessageId || !settings) return;
 
-        setState('evaluating');
+        chat.setState('evaluating');
+        quizzes.setQuizAnswer(answer);
 
         try {
-            const evaluation = await evaluateMentorQuiz(
-                currentQuiz,
-                quizAnswer,
+            const evaluation = await evaluateSocraticQuiz(
+                quizzes.currentQuiz,
+                answer,
                 settings.apiKey,
                 settings.model,
                 settings.apiBaseUrl,
@@ -192,57 +282,100 @@ export function useMentorChat() {
             );
 
             const updatedQuiz: MentorQuiz = {
-                ...currentQuiz,
-                userAnswer: quizAnswer,
+                ...quizzes.currentQuiz,
+                userAnswer: answer,
                 evaluation,
                 completed: true
             };
 
             await mentorService.updateQuiz(
-                currentSessionId,
-                currentQuizMessageId,
+                chat.currentSessionId,
+                quizzes.quizMessageId,
                 updatedQuiz
             );
 
-            setCurrentQuiz(updatedQuiz);
-            await loadSessionMessages(currentSessionId);
-            setState('idle');
+            quizzes.setCurrentQuiz(updatedQuiz);
+            await loadSessionMessages(chat.currentSessionId);
+            chat.setState('idle');
         } catch (err) {
             console.error('Failed to evaluate quiz:', err);
-            setError('Failed to evaluate answer. Please try again.');
-            setState('error');
+            chat.setError('Failed to evaluate answer. Please try again.');
+            chat.setState('error');
         }
-    }, [currentQuiz, currentSessionId, currentQuizMessageId, settings, quizAnswer]);
+    }, [chat, quizzes, settings]);
 
-    // Continue after quiz
+    /**
+     * Add a term to the dictionary from tool action
+     */
+    const addTermToDictionary = useCallback(async (term: string, definition: string, context?: string) => {
+        try {
+            const { db } = await import('@/lib/db');
+            await db.terms.add({
+                id: crypto.randomUUID(),
+                content: term,
+                definition,
+                context,
+                createdAt: Date.now()
+            });
+
+            // Initialize progress
+            await db.progress.add({
+                termId: term,
+                nextReview: Date.now(),
+                interval: 0,
+                repetition: 0,
+                efactor: 2.5,
+                history: []
+            });
+
+            tools.setToolAction(null);
+            return true;
+        } catch (err) {
+            console.error('Failed to add term:', err);
+            chat.setError('Failed to add term to dictionary.');
+            return false;
+        }
+    }, [chat, tools]);
+
+    /**
+     * Continue chatting after quiz completion
+     */
     const continueAfterQuiz = useCallback(() => {
-        setCurrentQuiz(null);
-        setCurrentQuizMessageId(null);
-        setQuizAnswer('');
-        setState('idle');
-    }, []);
+        quizzes.clearQuiz();
+        chat.setState('idle');
+    }, [chat, quizzes]);
 
-    // Clear error
-    const clearError = useCallback(() => {
-        setError('');
-        setState('idle');
-    }, []);
+    // Load sessions on mount
+    useEffect(() => {
+        loadSessions();
+    }, [loadSessions]);
 
     return {
-        sessions,
+        // Session state
+        sessions: chat.sessions,
         loadSessions,
-        currentSession,
-        messages,
-        state,
-        currentQuiz,
-        quizAnswer,
-        setQuizAnswer,
-        error,
+        currentSession: chat.currentSession,
+        messages: chat.messages,
+
+        // Chat state
+        state: chat.state,
+        error: chat.error,
+
+        // Quiz state
+        currentQuiz: quizzes.currentQuiz,
+
+        // Tool state
+        socraticQuestion: tools.socraticQuestion,
+        toolAction: tools.toolAction,
+        termSuggestions: tools.termSuggestions,
+
+        // Actions
         startNewChat,
         loadSession,
         sendMessage,
         submitQuizAnswer,
         continueAfterQuiz,
-        clearError
+        clearError: chat.clearError,
+        addTermToDictionary
     };
 }
