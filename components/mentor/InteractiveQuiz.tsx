@@ -60,7 +60,7 @@ export function InteractiveQuiz({ quiz, onAnswer }: InteractiveQuizProps) {
         const isConfigValid = quiz.correctAnswer !== undefined &&
             quiz.correctAnswer >= 0 &&
             quiz.correctAnswer < quiz.options.length;
-        const correctIndex = isConfigValid ? quiz.correctAnswer : 0;
+        const correctIndex = isConfigValid ? quiz.correctAnswer! : -1;
 
         return (
             <motion.div
