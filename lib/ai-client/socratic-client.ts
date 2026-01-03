@@ -64,7 +64,8 @@ export class SocraticAIClient extends AIClient {
                         },
                         focus: { type: "string", description: "What specific concept to test" },
                         question: { type: "string", description: "The quiz question (optional)" },
-                        options: { type: "array", items: { type: "string" }, description: "Answer options" },
+                        options: { type: "array", items: { type: "string" }, description: "Answer options (required for multiple_choice)" },
+                        correctAnswer: { type: "number", description: "0-indexed index of the correct answer in the options array (required for multiple_choice)" },
                         pairs: {
                             type: "array",
                             items: {
@@ -462,7 +463,8 @@ Be encouraging! Even wrong answers are learning opportunities.`;
                 return {
                     type: 'multiple_choice',
                     question: data.question || `What is the correct understanding of ${data.focus}?`,
-                    options: data.options || ['Option A', 'Option B', 'Option C', 'Option D']
+                    options: data.options || ['Option A', 'Option B', 'Option C', 'Option D'],
+                    correctAnswer: data.options ? data.correctAnswer : (data.correctAnswer ?? 0)
                 };
         }
     }

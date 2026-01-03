@@ -66,6 +66,8 @@ export interface MentorQuiz {
     type: 'multiple_choice' | 'cloze' | 'short_answer' | 'matching' | 'ordering';
     question: string;
     options?: string[];
+    // For multiple_choice: index of the correct answer in options array
+    correctAnswer?: number;
     completed: boolean;
     userAnswer?: string;
     evaluation?: {
@@ -99,6 +101,8 @@ export interface CreateQuizData {
     focus: string;
     question?: string;
     options?: string[];
+    // For multiple_choice: index of the correct answer (0-3)
+    correctAnswer?: number;
     pairs?: { left: string; right: string }[];
     items?: string[];
     correctOrder?: number[];
