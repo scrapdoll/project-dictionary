@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, X, ChevronRight } from 'lucide-react';
 import { MentorQuiz } from '@/lib/types';
@@ -10,13 +10,53 @@ interface InteractiveQuizProps {
     onAnswer: (answer: string) => void;
 }
 
+interface ValidationResult {
+    isValid: boolean;
+    error: string | null;
+    correctIndex: number;
+}
+
+/**
+ * Validates multiple-choice quiz configuration
+ * Returns validity status, error message, and the correct answer index
+ */
+function validateMultipleChoiceQuiz(quiz: MentorQuiz): ValidationResult {
+    if (quiz.type !== 'multiple_choice' || !quiz.options) {
+        return { isValid: true, error: null, correctIndex: 0 };
+    }
+
+    if (quiz.correctAnswer === undefined) {
+        return {
+            isValid: false,
+            error: 'Quiz configuration error: correct answer not specified by AI',
+            correctIndex: -1
+        };
+    }
+
+    if (quiz.correctAnswer < 0 || quiz.correctAnswer >= quiz.options.length) {
+        return {
+            isValid: false,
+            error: `Quiz configuration error: correct answer index ${quiz.correctAnswer} is out of bounds (0-${quiz.options.length - 1})`,
+            correctIndex: -1
+        };
+    }
+
+    return {
+        isValid: true,
+        error: null,
+        correctIndex: quiz.correctAnswer
+    };
+}
+
 export function InteractiveQuiz({ quiz, onAnswer }: InteractiveQuizProps) {
     const [selectedOption, setSelectedOption] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showResult, setShowResult] = useState(false);
     const [isCorrect, setIsCorrect] = useState(false);
     const [textAnswer, setTextAnswer] = useState('');
-    const [validationError, setValidationError] = useState<string | null>(null);
+
+    // Single source of truth for quiz validation
+    const validation = useMemo(() => validateMultipleChoiceQuiz(quiz), [quiz]);
 
     const handleSubmit = async () => {
         const answer = selectedOption || textAnswer;
@@ -27,23 +67,14 @@ export function InteractiveQuiz({ quiz, onAnswer }: InteractiveQuizProps) {
         // Simulate evaluation delay for better UX
         await new Promise(resolve => setTimeout(resolve, 600));
 
-        // For multiple choice, show immediate feedback
+        // For multiple choice, validate before showing feedback
         if (quiz.type === 'multiple_choice' && quiz.options) {
-            // Validate correctAnswer is provided and within bounds
-            if (quiz.correctAnswer === undefined) {
-                setValidationError('Quiz configuration error: correct answer not specified');
+            if (!validation.isValid) {
                 setIsSubmitting(false);
                 return;
             }
 
-            if (quiz.correctAnswer < 0 || quiz.correctAnswer >= quiz.options.length) {
-                setValidationError(`Quiz configuration error: correct answer index ${quiz.correctAnswer} is out of bounds (0-${quiz.options.length - 1})`);
-                setIsSubmitting(false);
-                return;
-            }
-
-            const correctIndex = quiz.correctAnswer;
-            setIsCorrect(selectedOption === quiz.options[correctIndex]);
+            setIsCorrect(selectedOption === quiz.options[validation.correctIndex]);
             setShowResult(true);
 
             setTimeout(() => {
@@ -56,12 +87,6 @@ export function InteractiveQuiz({ quiz, onAnswer }: InteractiveQuizProps) {
     };
 
     if (quiz.type === 'multiple_choice' && quiz.options) {
-        // Validate quiz configuration at render time
-        const isConfigValid = quiz.correctAnswer !== undefined &&
-            quiz.correctAnswer >= 0 &&
-            quiz.correctAnswer < quiz.options.length;
-        const correctIndex = isConfigValid ? quiz.correctAnswer! : -1;
-
         return (
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -76,19 +101,17 @@ export function InteractiveQuiz({ quiz, onAnswer }: InteractiveQuizProps) {
                 <h3 className="text-xl font-semibold">{quiz.question}</h3>
 
                 {/* Show validation error if quiz is misconfigured */}
-                {!isConfigValid && (
+                {!validation.isValid && validation.error && (
                     <div className="p-4 rounded-xl bg-red-500/20 border border-red-500/50 text-red-400">
-                        {quiz.correctAnswer === undefined
-                            ? 'Quiz configuration error: correct answer not specified by AI'
-                            : `Quiz configuration error: correct answer index ${quiz.correctAnswer} is out of bounds (0-${quiz.options.length - 1})`}
+                        {validation.error}
                     </div>
                 )}
 
                 <div className="space-y-2">
                     {quiz.options.map((option, index) => {
                         const isSelected = selectedOption === option;
-                        const showCorrect = showResult && index === correctIndex;
-                        const showIncorrect = showResult && isSelected && index !== correctIndex;
+                        const showCorrect = showResult && index === validation.correctIndex;
+                        const showIncorrect = showResult && isSelected && index !== validation.correctIndex;
 
                         return (
                             <motion.button
@@ -133,10 +156,10 @@ export function InteractiveQuiz({ quiz, onAnswer }: InteractiveQuizProps) {
                     )}
                 </AnimatePresence>
 
-                {!showResult && !validationError && (
+                {!showResult && (
                     <button
                         onClick={handleSubmit}
-                        disabled={!selectedOption || isSubmitting || !isConfigValid}
+                        disabled={!selectedOption || isSubmitting || !validation.isValid}
                         className="w-full py-4 rounded-xl bg-blue-500 text-white font-bold hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                         {isSubmitting ? (
