@@ -464,7 +464,7 @@ Be encouraging! Even wrong answers are learning opportunities.`;
                     type: 'multiple_choice',
                     question: data.question || `What is the correct understanding of ${data.focus}?`,
                     options: data.options || ['Option A', 'Option B', 'Option C', 'Option D'],
-                    correctAnswer: data.correctAnswer
+                    correctAnswer: data.options ? data.correctAnswer : (data.correctAnswer ?? 0)
                 };
         }
     }
