@@ -65,7 +65,7 @@ export class SocraticAIClient extends AIClient {
                         focus: { type: "string", description: "What specific concept to test" },
                         question: { type: "string", description: "The quiz question (optional)" },
                         options: { type: "array", items: { type: "string" }, description: "Answer options (required for multiple_choice)" },
-                        correctAnswer: { type: "number", description: "Index of the correct answer in options array (0-3, required for multiple_choice)" },
+                        correctAnswer: { type: "number", description: "0-indexed index of the correct answer in the options array (required for multiple_choice)" },
                         pairs: {
                             type: "array",
                             items: {
