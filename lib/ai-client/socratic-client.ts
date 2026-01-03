@@ -37,13 +37,13 @@ export class SocraticAIClient extends AIClient {
             type: "function",
             function: {
                 name: "add_term",
-                description: "Suggest adding a new term to the user's dictionary. Only use for terms that are NOT already in the user's dictionary.",
+                description: "Add a new term to the user's personal dictionary for spaced repetition learning. Use this when: (1) User explicitly asks to add a term, (2) A new important concept/term is introduced during teaching, (3) User asks about a specific technical term. Check existingTerms list first to avoid duplicates.",
                 parameters: {
                     type: "object",
                     properties: {
-                        term: { type: "string", description: "The name of the term/concept" },
-                        definition: { type: "string", description: "Clear definition of the term" },
-                        context: { type: "string", description: "Example usage or additional context" }
+                        term: { type: "string", description: "The name of the term/concept to add" },
+                        definition: { type: "string", description: "Clear, concise definition that captures the essence of the term" },
+                        context: { type: "string", description: "Example sentence, use case, or additional context to help understand the term" }
                     },
                     required: ["term", "definition", "context"]
                 }
@@ -167,7 +167,7 @@ export class SocraticAIClient extends AIClient {
                 temperature: 0.7
             });
 
-            return this.processSocraticResponse(response, topic, conversationHistory);
+            return this.processSocraticResponse(response, topic, conversationHistory, language);
 
         } catch (error) {
             logError(error as Error, 'SocraticAIClient.getResponse');
@@ -265,7 +265,17 @@ export class SocraticAIClient extends AIClient {
 **Concepts Covered:** ${context.conceptsIntroduced.length > 0 ? context.conceptsIntroduced.join(', ') : 'None yet'}
 **Terms Already in Dictionary:** ${existingTerms.length > 0 ? existingTerms.join(', ') : 'None'}
 
-=== SOCRATIC METHOD PRINCIPLES ===
+=== CRITICAL: IMMEDIATE TOOL EXECUTION ===
+
+When the user makes a DIRECT REQUEST, execute the appropriate tool IMMEDIATELY without Socratic questioning:
+- "Add [term] to dictionary" → CALL add_term tool immediately
+- "Create a quiz" → CALL create_quiz tool immediately
+- "Test me" or "Quiz me" → CALL create_quiz tool immediately
+- Any direct action request → Execute tool, don't ask questions
+
+The Socratic method applies to TEACHING and EXPLORING, not to direct tool requests!
+
+=== SOCRATIC METHOD PRINCIPLES (for teaching/exploring) ===
 
 1. NEVER give direct answers immediately. Guide through questions.
 2. Start with what the user already knows
@@ -278,14 +288,34 @@ export class SocraticAIClient extends AIClient {
 
 You have access to tools that can help enhance the learning experience. Use them strategically:
 
-- **add_term**: When a NEW key concept emerges (NOT already in dictionary!), suggest adding it
+- **add_term**: When a NEW key concept, technical term, or important vocabulary emerges (NOT already in dictionary!), IMMEDIATELY call this tool. Examples: programming concepts, scientific terms, historical figures, etc.
 - **create_quiz**: Test understanding at natural checkpoints or when user asks for a challenge
 - **highlight_concept**: Emphasize important connections
 - **suggest_practice**: Recommend exercises
 
+IMPORTANT: When you identify a new term worth learning, CALL the add_term tool - don't just mention it in text! The tool will show the user a card they can add to their dictionary.
+
 Only call tools when they add value to the learning experience.
 
-=== QUESTION CRAFTING ===
+=== TOOL USAGE EXAMPLES ===
+
+Example 1 - DIRECT REQUEST (execute immediately):
+User: "Add 'recursion' to my dictionary"
+AI: (IMMEDIATELY calls add_term tool, no questions)
+
+Example 2 - User asks about a specific term:
+User: "What is a closure?"
+AI: "That's a great question! A closure is..." (explains, then calls add_term tool)
+
+Example 3 - User wants to learn about a topic (use Socratic):
+User: "Teach me about React hooks"
+AI: "Great topic! Let's start with a question - what do you think a 'hook' might be in programming?"
+
+Example 4 - User asks for a quiz:
+User: "Test me on what we covered"
+AI: (IMMEDIATELY calls create_quiz tool)
+
+=== QUESTION CRAFTING (for teaching/exploring) ===
 
 Good Socratic questions:
 - "What do you think might happen if...?"
@@ -362,7 +392,8 @@ Be encouraging! Even wrong answers are learning opportunities.`;
     private processSocraticResponse(
         response: { content?: string; toolCalls?: LLMToolCall[] },
         topic: string,
-        conversationHistory: MentorChatMessage[]
+        conversationHistory: MentorChatMessage[],
+        language: string = 'en-US'
     ): SocraticMentorResponse {
         let toolAction: MentorToolAction | undefined = undefined;
         let shouldCreateQuiz = false;
@@ -408,7 +439,17 @@ Be encouraging! Even wrong answers are learning opportunities.`;
 
         const content = response.content || '';
         if (content.trim().length === 0) {
-            return this.getFallbackResponse('en-US', toolAction, shouldCreateQuiz, quiz);
+            // If there's a tool action but no content, just return the action without fallback message
+            if (toolAction || shouldCreateQuiz) {
+                return {
+                    message: '',
+                    toolAction,
+                    shouldCreateQuiz,
+                    quiz
+                };
+            }
+            // Otherwise, return fallback response
+            return this.getFallbackResponse(language, toolAction, shouldCreateQuiz, quiz);
         }
 
         return {

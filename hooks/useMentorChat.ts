@@ -58,6 +58,42 @@ export function useMentorChat() {
     }, [chat]);
 
     /**
+     * Save an assistant message to the session
+     *
+     * Handles saving messages that may have content, tool actions, or quizzes.
+     * Returns the message ID if saved, undefined otherwise.
+     */
+    const saveAssistantMessage = useCallback(async (
+        sessionId: string,
+        response: Awaited<ReturnType<typeof socraticMentorResponse>>
+    ): Promise<string | undefined> => {
+        // Build message content with Socratic question
+        let messageContent = response.message;
+        if (response.socraticQuestion) {
+            messageContent += '\n\n' + response.socraticQuestion;
+            tools.setSocraticQuestion(response.socraticQuestion);
+        }
+
+        // Save message if we have content, tool action, or quiz
+        const hasToolAction = response.toolAction !== undefined;
+        const hasQuiz = response.shouldCreateQuiz && response.quiz;
+        if (messageContent.trim().length > 0 || hasToolAction || hasQuiz) {
+            return await mentorService.addMessage(sessionId, {
+                role: 'assistant',
+                content: messageContent,
+                timestamp: Date.now(),
+                quiz: hasQuiz ? {
+                    id: crypto.randomUUID(),
+                    ...response.quiz,
+                    completed: false
+                } : undefined
+            });
+        }
+
+        return undefined;
+    }, [tools]);
+
+    /**
      * Start a new mentor chat session
      */
     const startNewChat = useCallback(async (newTopic: string) => {
@@ -97,26 +133,8 @@ export function useMentorChat() {
                 (allTerms || []).map(t => t.content)
             );
 
-            // Add assistant greeting with Socratic question
-            let messageContent = response.message;
-            if (response.socraticQuestion) {
-                messageContent += '\n\n' + response.socraticQuestion;
-                tools.setSocraticQuestion(response.socraticQuestion);
-            }
-
-            // Only save if we have actual content
-            if (messageContent && messageContent.trim().length > 0) {
-                await mentorService.addMessage(sessionId, {
-                    role: 'assistant',
-                    content: messageContent,
-                    timestamp: Date.now(),
-                    quiz: response.shouldCreateQuiz && response.quiz ? {
-                        id: crypto.randomUUID(),
-                        ...response.quiz,
-                        completed: false
-                    } : undefined
-                });
-            }
+            // Save assistant message (handles content, tool actions, and quizzes)
+            await saveAssistantMessage(sessionId, response);
 
             // Handle tool action if present
             if (response.toolAction) {
@@ -136,7 +154,7 @@ export function useMentorChat() {
             chat.setError('Failed to start mentor session. Please check your connection.');
             chat.setState('error');
         }
-    }, [settings, chat, quizzes, tools, allTerms, loadSessions]);
+    }, [settings, chat, quizzes, tools, allTerms, loadSessions, saveAssistantMessage]);
 
     /**
      * Load an existing chat session
@@ -201,27 +219,8 @@ export function useMentorChat() {
                 (allTerms || []).map(t => t.content)
             );
 
-            // Build message content with Socratic question
-            let messageContent = response.message;
-            if (response.socraticQuestion) {
-                messageContent += '\n\n' + response.socraticQuestion;
-                tools.setSocraticQuestion(response.socraticQuestion);
-            }
-
-            // Only add assistant message if we have actual content
-            let messageId: string | undefined;
-            if (messageContent && messageContent.trim().length > 0) {
-                messageId = await mentorService.addMessage(chat.currentSessionId, {
-                    role: 'assistant',
-                    content: messageContent,
-                    timestamp: Date.now(),
-                    quiz: response.shouldCreateQuiz && response.quiz ? {
-                        id: crypto.randomUUID(),
-                        ...response.quiz,
-                        completed: false
-                    } : undefined
-                });
-            }
+            // Save assistant message (handles content, tool actions, and quizzes)
+            const messageId = await saveAssistantMessage(chat.currentSessionId, response);
 
             // Handle tool action
             if (response.toolAction) {
@@ -260,7 +259,7 @@ export function useMentorChat() {
             chat.setError('Failed to send message. Please try again.');
             chat.setState('error');
         }
-    }, [chat, quizzes, tools, settings, allTerms]);
+    }, [chat, quizzes, tools, settings, allTerms, saveAssistantMessage]);
 
     /**
      * Submit a quiz answer for evaluation
