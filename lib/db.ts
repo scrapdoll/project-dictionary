@@ -75,12 +75,7 @@ export async function importDatabase(data: DatabaseExport) {
 
     await db.transaction('rw', tablesToClear, async () => {
         // Clear existing data
-        await db.terms.clear();
-        await db.progress.clear();
-        if (hasMentorData) {
-            await db.mentorChatSessions.clear();
-            await db.mentorChatMessages.clear();
-        }
+        await Promise.all(tablesToClear.map(table => table.clear()));
 
         // Import data
         await db.terms.bulkAdd(data.terms);
