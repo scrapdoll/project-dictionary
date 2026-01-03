@@ -81,7 +81,7 @@ export async function importDatabase(data: DatabaseExport) {
         await db.terms.bulkAdd(data.terms);
         await db.progress.bulkAdd(data.progress);
 
-        if (hasMentorData && data.mentorChatSessions && data.mentorChatMessages) {
+        if (hasMentorData) {
             await db.mentorChatSessions.bulkAdd(data.mentorChatSessions);
             await db.mentorChatMessages.bulkAdd(data.mentorChatMessages);
         }
