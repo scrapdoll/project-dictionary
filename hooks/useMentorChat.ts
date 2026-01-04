@@ -197,8 +197,20 @@ export function useMentorChat() {
         tools.clearSocraticQuestion();
         tools.setToolAction(null);
 
+        // Create user message object
+        const userMessage: MentorChatMessage = {
+            id: crypto.randomUUID(),
+            sessionId: chat.currentSessionId,
+            role: 'user',
+            content,
+            timestamp: Date.now()
+        };
+
         try {
-            // Add user message
+            // Add to UI state immediately for instant feedback
+            chat.addMessage(userMessage);
+
+            // Add to database
             await mentorService.addMessage(chat.currentSessionId, {
                 role: 'user',
                 content,
@@ -227,23 +239,14 @@ export function useMentorChat() {
                 tools.setToolAction(response.toolAction);
             }
 
-            // Extract term suggestions from conversation
-            const updatedMessages: MentorChatMessage[] = [
-                ...chat.messages,
-                {
-                    id: crypto.randomUUID(),
-                    sessionId: chat.currentSessionId,
-                    role: 'user' as const,
-                    content,
-                    timestamp: Date.now()
-                }
-            ];
+            // Extract term suggestions from conversation (chat.messages already contains user message)
             const existingTermNames = (allTerms || []).map(t => t.content);
-            const suggestions = extractTermSuggestions(updatedMessages, existingTermNames);
+            const suggestions = extractTermSuggestions(chat.messages, existingTermNames);
             if (suggestions.length > 0) {
                 tools.setTermSuggestions(suggestions);
             }
 
+            // Reload to get assistant message from database
             await loadSessionMessages(chat.currentSessionId);
 
             if (response.shouldCreateQuiz && response.quiz) {
@@ -256,6 +259,8 @@ export function useMentorChat() {
             }
         } catch (err) {
             console.error('Failed to send message:', err);
+            // Remove the user message from UI since it failed
+            chat.setMessages(chat.messages.filter(m => m.id !== userMessage.id));
             chat.setError('Failed to send message. Please try again.');
             chat.setState('error');
         }
